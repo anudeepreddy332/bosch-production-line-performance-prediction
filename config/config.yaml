@@ -1,0 +1,56 @@
+# Project Configuration
+project:
+  name: "bosch-production-line-performance"
+  random_seed: 42
+
+# Data Paths
+paths:
+  raw: "data/raw"
+  processed: "data/processed"
+  features: "data/features"
+  models: "models"
+  logs: "logs"
+
+# Data Processing
+data_processing:
+  sample_size: null        # null = full data, 0.01 = 1% sample for testing
+  downsampling_rate: 0.7   # Keep 70% of negative class (from winning solution)
+  null_threshold: 0.99     # Drop features with >99% nulls
+
+# Feature Engineering
+features:
+  use_leak_features: true
+  use_time_features: true
+  use_stage_similarity: true     # S0-S11 + S12-S23 combination
+  categorical_stations: [24, 25, 26, 27, 28, 29, 32, 44, 47]
+
+# Model Training
+model:
+  type: "lightgbm"   # Options: lightgbm, xgboost, catboost
+  n_folds: 4         # Leak-stratified CV
+  n_seeds: 3         # Train with 3 seeds for stability
+
+  lightgbm_params:
+    objective: "binary"
+    metric: null                 # use null when metric is custom (e.g., MCC)
+    boosting_type: "gbdt"
+    num_leaves: 31
+    learning_rate: 0.05
+    feature_fraction: 0.8
+    bagging_fraction: 0.8
+    bagging_freq: 5
+    max_depth: -1
+    min_child_samples: 20
+    scale_pos_weight: 200       # ~0.58% failure rate
+    verbose: -1
+    n_jobs: -1
+
+# Validation
+validation:
+  metric: "mcc"
+  early_stopping_rounds: 100
+
+# MLflow
+mlflow:
+  experiment_name: "bosch-production-line-performance"
+  tracking_uri: "file:./mlruns"

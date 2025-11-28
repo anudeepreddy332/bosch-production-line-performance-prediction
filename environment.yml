@@ -1,0 +1,28 @@
+name: bosch
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pandas
+  - numpy
+  - pyarrow
+  - duckdb
+  - lightgbm
+  - xgboost
+  - catboost
+  - scikit-learn
+  - seaborn
+  - optuna
+  - mlflow
+  - dvc
+  - pyyaml
+  - python-dotenv
+  - tqdm
+  - kaggle
+  - streamlit
+  - plotly
+  - pip
+  - pip:
+      - black
+      - flake8
+      - pytest
