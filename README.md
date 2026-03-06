@@ -1,4 +1,4 @@
-# Handy commands cheat-sheet (paste into README or LLM)
+# Handy commands cheat-sheet
 	•	Create env: mamba env create -f environment.yml
 	•	Activate: conda activate bosch
 	•	Remove: mamba env remove -n bosch

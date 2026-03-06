@@ -1,114 +1,36 @@
-# ============================================
-# DATA FILES (NEVER COMMIT RAW DATA)
-# ============================================
-# raw and input data
-/data/raw/*.csv
-/data/raw/*.zip
-data/raw/*.csv
-data/raw/*.zip
-data/*.csv
-data/*.parquet
-data/*.feather
+# Data
+data/raw/
 data/processed/
 data/features/
+data/models/
 
-# Keep directory structure markers if you add them
-!data/raw/.gitkeep
-!data/processed/.gitkeep
-!data/features/.gitkeep
-
-# ============================================
-# MODELS & EXPERIMENTS
-# ============================================
-models/
-models/*.pkl
-models/*.joblib
-models/*.bin
-mlruns/
-.mlflow/
-wandb/
-
-# ============================================
-# CONDA/MAMBA ENVIRONMENT & installers
-# ============================================
-envs/
-.conda/
-*.conda
-conda-meta/
-Mambaforge-MacOSX-arm64.sh
-mamba/
-
-# Keep canonical environment.yml & conda-lock.yml (we want them tracked)
-# (do NOT ignore these)
-# environment.yml
-# conda-lock.yml
-
-# ============================================
-# PYTHON
-# ============================================
-__pycache__/
-*.py[cod]
-*$py.class
-
-# Virtual envs
-.venv/
-venv/
-ENV/
-env/
-
-# Jupyter
-.ipynb_checkpoints/
-*.ipynb
-
-# ============================================
-# LOGS & CACHE
-# ============================================
-logs/
+# Logs — catch ALL nested log directories anywhere in project
+**/logs/
 *.log
-.cache/
-.pytest_cache/
 
-# ============================================
-# IDE & EDITOR
-# ============================================
-.idea/
-*.iml
-*.iws
-.vscode/
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
 
-# ============================================
-# SYSTEM FILES
-# ============================================
-.DS_Store
-.AppleDouble
-.LSOverride
-._*
-
-# ============================================
-# SECRETS & CREDENTIALS
-# ============================================
+# Environments
 .env
-.env.local
-.envrc
-kaggle.json
-*.key
-*.pem
-
-# ============================================
-# DVC
-# ============================================
-.dvc/cache
-.dvc/tmp
-
-# ============================================
-# BUILD & DISTRIBUTION
-# ============================================
-build/
-dist/
 *.egg-info/
 
-# ============================================
-# TEMPORARY / project notes
-# ============================================
+# OS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+
+# Outputs — keep EDA charts, ignore model artifacts
+outputs/models/
+
+# Personal notes and scratch files
 NOTES.md
 PROJECT_EXECUTION.md
+TEST.md
+test.py

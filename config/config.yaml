@@ -8,49 +8,59 @@ paths:
   raw: "data/raw"
   processed: "data/processed"
   features: "data/features"
-  models: "models"
+  models: "data/models"          # ← FIXED (was "models")
   logs: "logs"
 
 # Data Processing
 data_processing:
-  sample_size: null        # null = full data, 0.01 = 1% sample for testing
-  downsampling_rate: 0.7   # Keep 70% of negative class (from winning solution)
-  null_threshold: 0.99     # Drop features with >99% nulls
+  sample_size: null              # null = full data, 0.01 = 1% for testing
+  null_threshold: 0.99           # Drop features with >99% nulls (used in Day 4)
 
-# Feature Engineering
+# Feature Engineering (what we ACTUALLY built in Day 5)
 features:
-  use_leak_features: true
-  use_time_features: true
-  use_stage_similarity: true     # S0-S11 + S12-S23 combination
-  categorical_stations: [24, 25, 26, 27, 28, 29, 32, 44, 47]
+  use_routing_features: true     # ✅ Routing (19 features)
+  use_null_patterns: true        # ✅ Sparsity patterns (6 features)
+  use_aggregations: true         # ✅ Station aggregates (17 features)
+  use_interactions: true         # ✅ Interaction terms (4 features)
+  use_categorical: false         # ❌ Skipped (RAM constraints)
+
+  # High-signal stations (from EDA)
+  critical_stations: [29, 30, 33, 34, 37]  # >50% coverage
+  rare_stations: [32, 38, 43, 44, 49, 50]  # <10% coverage
+  predictive_stations: [24, 26, 27]        # Top feature importance
 
 # Model Training
 model:
-  type: "lightgbm"   # Options: lightgbm, xgboost, catboost
-  n_folds: 4         # Leak-stratified CV
-  n_seeds: 3         # Train with 3 seeds for stability
+  type: "lightgbm"
+  test_size: 0.2                 # 80/20 train/val split
+  stratify: true                 # Preserve 0.58% failure rate in both sets
 
   lightgbm_params:
     objective: "binary"
-    metric: null                 # use null when metric is custom (e.g., MCC)
     boosting_type: "gbdt"
-    num_leaves: 31
-    learning_rate: 0.05
-    feature_fraction: 0.8
-    bagging_fraction: 0.8
-    bagging_freq: 5
-    max_depth: -1
-    min_child_samples: 20
-    scale_pos_weight: 200       # ~0.58% failure rate
-    verbose: -1
+    n_estimators: 1000
+    learning_rate: 0.01
+    max_depth: -1                # Leaf-wise growth (LightGBM default)
+    num_leaves: 64
+    subsample: 0.8               # Row sampling (regularization)
+    subsample_freq: 5
+    colsample_bytree: 0.8        # Column sampling
+    min_child_samples: 50
+    reg_lambda: 1.0              # L2 regularization
+    scale_pos_weight: null       # ← Calculate dynamically (n_neg / n_pos)
+    random_state: 42
     n_jobs: -1
+    verbose: -1
 
 # Validation
 validation:
-  metric: "mcc"
-  early_stopping_rounds: 100
+  metric: "mcc"                  # Matthews Correlation Coefficient
+  optimize_threshold: true       # Search for best threshold (not 0.5)
+  threshold_range: [0.01, 0.99]  # Test range for threshold optimization
+  early_stopping_rounds: 50      # Stop if no improvement
 
-# MLflow
-mlflow:
-  experiment_name: "bosch-production-line-performance"
-  tracking_uri: "file:./mlruns"
+# Outputs
+outputs:
+  save_model: true
+  save_plots: true
+  feature_importance_top_n: 30
