@@ -281,9 +281,7 @@ def main():
     # Drop path_signature before saving — it's a raw string, not a model feature.
     # The model gets path_count, path_failure_rate, path_risk_tier instead.
     output_path = project_root / "data/features/train_path_features.parquet"
-    presence_df.drop(columns=['path_signature']).to_parquet(
-        output_path, compression='snappy', index=False
-    )
+    presence_df.to_parquet(output_path, compression='snappy', index=False)
     file_size = output_path.stat().st_size / 1024 ** 2
     logger.info(f"\n✅ Saved → {output_path} ({file_size:.2f} MB)")
     logger.info(f"\n🎯 NEXT: python notebooks/15_merge_path_features.py")
