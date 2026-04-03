@@ -1,91 +1,133 @@
-# Production ML System for Manufacturing Failure Detection (Bosch Dataset)
+# Bosch Production Line Failure Detection (Production ML System)
 
-## Project Overview
-This repository delivers a production-oriented ML decision system for Bosch manufacturing failure detection. The system is designed for extremely imbalanced outcomes (about 0.5% positives) and focuses on operational decisions, not only offline leaderboard metrics.
+## 🚀 Overview
+This project simulates a real-world production ML system for detecting manufacturing failures in highly imbalanced industrial data (~0.58% failure rate).
 
-## Problem Statement
-Given part-level signals from production lines, estimate failure risk and convert model scores into practical actions:
-- auto reject high-risk units,
-- send additional units to manual inspection under capacity limits,
-- pass the remaining units.
+Unlike leaderboard-focused solutions, this system is designed for:
+- Real-world deployment
+- Business decision-making
+- Cost-sensitive optimization
+- Monitoring and drift detection
 
-## Key Results
-From current production outputs:
-- Minimum-cost operating point (`FN=100`, `FP=5`):
-  - Recall: `0.4505`
-  - Precision: `0.1401`
-- Inspection-driven operating point (`10%` inspection budget):
-  - Recall: `0.6320`
-  - Precision: `0.0368`
-- Monitoring (Evidently):
-  - Dataset drift share: `0.0`
-  - Prediction drift detected: `false`
+---
 
-These results come from:
-- `outputs/production_decision_summary.json`
-- `outputs/batch_simulation_summary.json`
-- `outputs/monitoring/evidently_summary.json`
+## 🧠 Key Philosophy
 
-## System Architecture (High Level)
-1. Risk scores are provided from precomputed prediction artifacts.
-2. Decision layer converts scores into policy actions (threshold and inspection budget).
-3. Batch simulator evaluates operational behavior under production-like windows.
-4. Monitoring generates drift diagnostics via Evidently.
-5. API and dashboard expose decisions and policy behavior for operators.
+We intentionally moved away from pure MCC optimization.
 
-## Repository Structure
-```text
-bosch-production-line-performance/
-├── src/
-├── apps/
-├── scripts/
-├── configs/
-├── docs/
-├── outputs/
-├── data/
-├── Dockerfile.api
-├── Dockerfile.dashboard
-├── docker-compose.yml
-├── requirements.txt
-└── README.md
-```
+Why?
 
-## Run Locally
-Install dependencies:
+Top Kaggle solutions (~0.52 MCC) rely on:
+- Data leakage
+- Future information
+- Non-deployable tricks
+
+This project focuses on:
+✅ Reproducibility  
+✅ Leakage-safe modeling  
+✅ Production reliability  
+
+---
+
+## 🏗️ Architecture
+
+### 🔵 Production Pipeline (`main` branch)
+- Decision system (threshold + cost optimization)
+- Batch simulation (streaming-like behavior)
+- Drift detection (Evidently)
+- API (FastAPI)
+- Dashboard (Streamlit)
+
+### 🟢 Training Pipeline (`training-pipeline` branch)
+- Data ingestion (CSV → Parquet, memory safe)
+- Feature engineering (baseline + G + H)
+- Chunk-aware CV (leakage-safe)
+- LightGBM training
+- Meta-model stacking
+- OOF prediction generation
+
+---
+
+## 🔁 End-to-End Flow
+
+Raw CSV → Parquet → Features → Models → OOF predictions
+↓
+Meta model
+↓
+Production system (thresholding + cost + simulation)
+↓
+Dashboard + API + Monitoring
+
+---
+
+## 📊 Key Results
+
+- Best MCC: ~0.317
+- Recall @ 10% inspection: ~0.63
+- Precision: low (expected due to imbalance)
+- Fully production-safe pipeline
+
+---
+
+## ⚙️ How to Run
+
+### Training (separate branch)
 ```bash
-pip install -r requirements.txt
-```
+git checkout training-pipeline
+python scripts/prepare_data.py --zip-path ~/Downloads/bosch-production-line-performance.zip
+python scripts/train_meta_model.py
+````
 
-Run full pipeline:
+### Production
+
 ```bash
+git checkout main
 python scripts/run_full_system.py
-```
-
-Expected outputs:
-- `outputs/production_decision_summary.json`
-- `outputs/batch_simulation_summary.json`
-- `outputs/monitoring/evidently_summary.json`
-- `outputs/monitoring/evidently_report.html`
-
-## Run with Docker
-```bash
-docker compose up --build
-```
-
-## Demo Instructions
-Start API:
-```bash
-uvicorn apps.api.main:app --host 0.0.0.0 --port 8000
-```
-- Health check: `GET /health`
-- Single prediction: `POST /predict`
-- Batch prediction: `POST /batch_predict`
-
-Start dashboard:
-```bash
 streamlit run apps/streamlit_dashboard/app.py
 ```
 
-## Documentation
-- Architecture notes: `docs/architecture.md`
-- Case study: `docs/CASE_STUDY_BOSCH_PRODUCTION_SYSTEM.md`
+---
+
+## 📈 Dashboard Features
+
+* Threshold tuning
+* Inspection budget simulation
+* Recall vs precision trade-offs
+* Cost optimization
+* Failure analysis
+
+---
+
+## 🧠 Business Interpretation
+
+This system answers:
+
+* How many failures are we catching?
+* What is the inspection cost?
+* What is the optimal threshold?
+* What happens if we increase recall?
+
+---
+
+## 🛠️ Tech Stack
+
+* Python, Pandas, LightGBM
+* Streamlit (dashboard)
+* FastAPI (serving)
+* Evidently (monitoring)
+* Docker (deployment-ready)
+
+---
+
+## 🔮 Future Improvements
+
+* Real-time streaming (Kafka)
+* Automated retraining
+* Cloud deployment (AWS/GCP)
+* Model registry
+
+---
+
+## 👨‍💻 Author
+
+Anudeep Reddy Mutyala
