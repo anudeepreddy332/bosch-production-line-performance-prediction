@@ -1,0 +1,32 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: bosch_api
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONPATH=/app
+      - BOSCH_PROJECT_ROOT=/app
+    volumes:
+      - ./:/app
+      - ./data:/app/data
+      - ./outputs:/app/outputs
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.dashboard
+    container_name: bosch_dashboard
+    ports:
+      - "8501:8501"
+    environment:
+      - PYTHONPATH=/app
+      - BOSCH_PROJECT_ROOT=/app
+    volumes:
+      - ./:/app
+      - ./data:/app/data
+      - ./outputs:/app/outputs
+    depends_on:
+      - api

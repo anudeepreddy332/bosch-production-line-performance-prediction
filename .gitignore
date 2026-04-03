@@ -17,6 +17,7 @@ __pycache__/
 
 # Environments
 .env
+.venv/
 *.egg-info/
 
 # OS
@@ -28,9 +29,32 @@ __pycache__/
 
 # Outputs — keep EDA charts, ignore model artifacts
 outputs/models/
+outputs/**/*.csv
+outputs/**/*.parquet
+outputs/**/daily_drift_report.json
+outputs/**/reference.parquet
+outputs/**/current.parquet
+outputs/**/batch_simulation_state.json
+outputs/**/batch_stream_log.csv
 
 # Personal notes and scratch files
 NOTES.md
 PROJECT_EXECUTION.md
 TEST.md
 test.py
+agent.md
+AGENT.md
+system_state.md
+SYSTEM_STATE.md
+project_execution.md
+task_plan.md
+TASK_PLAN.md
+test.md
+
+# Large local data artifacts
+data/raw/
+data/processed/
+data/models/
+data/artifacts/
+data/features/*.parquet
+data/features/*.pkl

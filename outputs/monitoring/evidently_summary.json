@@ -1,0 +1,24 @@
+{
+  "engine": "evidently",
+  "reference_rows": 828622,
+  "current_rows": 355125,
+  "excluded_columns": [
+    "id",
+    "index",
+    "row_id"
+  ],
+  "summary": {
+    "dataset_drift": {
+      "drifted_columns_count": 0,
+      "number_of_columns": 4,
+      "drift_share": 0.0
+    },
+    "prediction_drift": {
+      "column": "pred",
+      "drift_detected": false,
+      "drift_score": 0.00343658531729428,
+      "threshold": 0.1
+    },
+    "drifted_columns": []
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "mode": "full",
+  "policy": {
+    "threshold_high": 0.6,
+    "inspection_budget_pct": 5.0
+  },
+  "batch_size": 10000,
+  "schedule_frequency_seconds": 300,
+  "n_batches": 119,
+  "overall": {
+    "recall_mean": 0.5670721191830983,
+    "precision_mean": 0.06603182549615592,
+    "flagged_pct_mean": 5.000145774883212,
+    "pred_mean_mean": 0.032907821958055014
+  },
+  "drift_signals": {
+    "pred_mean_std": 0.0008483379677378546,
+    "pred_std_std": 0.0037330619991473688,
+    "recall_std": 0.061379619273912264,
+    "precision_std": 0.01267653888359525
+  }
+}

@@ -3,26 +3,22 @@ channels:
   - conda-forge
 dependencies:
   - python=3.11
+  - pip
   - pandas
   - numpy
   - pyarrow
-  - duckdb
-  - lightgbm
-  - xgboost
-  - catboost
   - scikit-learn
-  - seaborn
-  - optuna
-  - mlflow
-  - dvc
+  - lightgbm
   - pyyaml
-  - python-dotenv
   - tqdm
-  - kaggle
+  - psutil
+  - fsspec
+  - statsmodels
+  - python-dotenv
   - streamlit
   - plotly
-  - pip
+  - fastapi
+  - uvicorn
   - pip:
-      - black
-      - flake8
-      - pytest
+      - evidently
+      - iterative-telemetry

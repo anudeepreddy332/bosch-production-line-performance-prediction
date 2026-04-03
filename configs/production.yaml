@@ -1,0 +1,15 @@
+policy:
+  threshold_high: 0.60
+  inspection_budget_pct: 10
+
+costs:
+  false_negative: 100
+  false_positive: 5
+
+batch_simulation:
+  batch_size: 10000
+
+monitoring:
+  drift_engine: evidently
+  report_json: outputs/monitoring/evidently_summary.json
+  report_html: outputs/monitoring/evidently_report.html
