@@ -6,17 +6,17 @@
   },
   "batch_size": 10000,
   "schedule_frequency_seconds": 300,
-  "n_batches": 119,
+  "n_batches": 5,
   "overall": {
-    "recall_mean": 0.5670721191830983,
-    "precision_mean": 0.06603182549615592,
-    "flagged_pct_mean": 5.000145774883212,
-    "pred_mean_mean": 0.032907821958055014
+    "recall_mean": 0.6032564797396063,
+    "precision_mean": 0.0656,
+    "flagged_pct_mean": 5.0,
+    "pred_mean_mean": 0.03250275626778602
   },
   "drift_signals": {
-    "pred_mean_std": 0.0008483379677378546,
-    "pred_std_std": 0.0037330619991473688,
-    "recall_std": 0.061379619273912264,
-    "precision_std": 0.01267653888359525
+    "pred_mean_std": 0.0007110235523048311,
+    "pred_std_std": 0.0038089684650472484,
+    "recall_std": 0.05109936527825936,
+    "precision_std": 0.00931665175908169
   }
 }

@@ -1,7 +1,7 @@
 {
   "engine": "evidently",
-  "reference_rows": 828622,
-  "current_rows": 355125,
+  "reference_rows": 35000,
+  "current_rows": 15000,
   "excluded_columns": [
     "id",
     "index",
@@ -16,7 +16,7 @@
     "prediction_drift": {
       "column": "pred",
       "drift_detected": false,
-      "drift_score": 0.00343658531729428,
+      "drift_score": 0.01756736145522506,
       "threshold": 0.1
     },
     "drifted_columns": []
