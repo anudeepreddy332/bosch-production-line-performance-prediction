@@ -1,60 +1,61 @@
-# Data
-data/raw/
-data/processed/
-data/features/
-data/models/
-
-# Logs — catch ALL nested log directories anywhere in project
-**/logs/
-*.log
-
-# Python cache
+# =========================
+# 🧠 Python / Cache
+# =========================
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 .Python
 
-# Environments
+# =========================
+# 🧪 Environments
+# =========================
 .env
 .venv/
+venv/
 *.egg-info/
 
-# OS
+# =========================
+# 💻 OS / IDE
+# =========================
 .DS_Store
-
-# IDE
 .idea/
 .vscode/
 
-# Outputs — keep EDA charts, ignore model artifacts
-outputs/models/
-outputs/**/*.csv
-outputs/**/*.parquet
-outputs/**/daily_drift_report.json
-outputs/**/reference.parquet
-outputs/**/current.parquet
-outputs/**/batch_simulation_state.json
-outputs/**/batch_stream_log.csv
-
-# Personal notes and scratch files
-NOTES.md
-PROJECT_EXECUTION.md
-TEST.md
-test.py
-agent.md
-AGENT.md
-system_state.md
-SYSTEM_STATE.md
-project_execution.md
-task_plan.md
-TASK_PLAN.md
-test.md
-
-# Large local data artifacts
+# =========================
+# 📊 Data (DO NOT PUSH RAW)
+# =========================
 data/raw/
 data/processed/
 data/models/
 data/artifacts/
+
+# Keep ONLY essential feature artifacts (optional override)
+# Comment this out if you WANT to track features
 data/features/*.parquet
 data/features/*.pkl
+
+# =========================
+# 📈 Outputs (EXPERIMENTAL)
+# =========================
+outputs/*.csv
+outputs/*.parquet
+
+# Monitoring artifacts
+outputs/**/daily_drift_report.json
+outputs/**/reference.parquet
+outputs/**/current.parquet
+
+# Simulation artifacts
+outputs/**/batch_simulation_state.json
+outputs/**/batch_stream_log.csv
+
+# Model artifacts
+outputs/models/
+
+# =========================
+# 📜 Logs
+# =========================
+logs/
+**/logs/
+*.log
