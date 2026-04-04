@@ -51,3 +51,13 @@ if __name__ == "__main__":
     print(" - outputs/production_decision_summary.json")
     print(" - outputs/batch_simulation_summary.json")
     print(" - outputs/monitoring/evidently_summary.json")
+
+from src.utils.s3_utils import upload_file
+
+print("\n[START] Uploading to S3")
+
+upload_file("outputs/production_decision_summary.json", "outputs/production_decision_summary.json")
+upload_file("outputs/batch_simulation_summary.json", "outputs/batch_simulation_summary.json")
+upload_file("outputs/monitoring/evidently_summary.json", "outputs/monitoring/evidently_summary.json")
+
+print("[OK] Upload to S3 complete")
