@@ -1,22 +1,26 @@
 from __future__ import annotations
 
-from pathlib import Path
-
+import boto3
+import json
+import os
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
 from src.evaluation.decision_system import CostConfig, build_decision_table, summarize_operating_points
+from io import BytesIO
 
-ROOT = Path(__file__).resolve().parents[2]
-FEAT = ROOT / "data/features"
+AWS_BUCKET = "bosch-ml-production-anudeep-193116635897-ap-south-2-an"
+AWS_REGION = "ap-south-2"
 
-META_PATH = FEAT / "meta_dataset.parquet"
-OOF_CANDIDATES = [
-    FEAT / "oof_predictions_final.parquet",
-    FEAT / "oof_predictions_context_meta_v2_blend.parquet",
-]
+s3 = boto3.client("s3", region_name=AWS_REGION)
+
+
+def load_parquet_from_s3(key: str):
+    obj = s3.get_object(Bucket=AWS_BUCKET, Key=key)
+    return pd.read_parquet(BytesIO(obj["Body"].read()))
+
 
 COLOR_RECALL = "#2ca02c"
 COLOR_PRECISION = "#1f77b4"
@@ -27,32 +31,25 @@ st.title("Bosch Failure Decision System")
 st.caption("Production-focused decision analytics for failure detection under inspection and cost constraints")
 
 
-def _resolve_oof_path() -> Path:
-    for path in OOF_CANDIDATES:
-        if path.exists():
-            return path
-    raise FileNotFoundError(f"Missing OOF predictions. Checked: {[str(p) for p in OOF_CANDIDATES]}")
-
-
 @st.cache_data(show_spinner=False)
 def load_scoring_data() -> pd.DataFrame:
-    if not META_PATH.exists():
-        st.error(f"Missing file: {META_PATH}")
-        st.stop()
-
     try:
-        oof_path = _resolve_oof_path()
-    except FileNotFoundError as exc:
-        st.error(str(exc))
+        meta = load_parquet_from_s3("data/features/meta_dataset.parquet")
+        pred = load_parquet_from_s3("data/features/oof_predictions_final.parquet")
+    except Exception as e:
+        st.error(f"S3 Load Failed: {str(e)}")
         st.stop()
 
-    meta = pd.read_parquet(META_PATH, columns=["Id", "Response"])
-    pred = pd.read_parquet(oof_path, columns=["Id", "oof_pred"])
+    df = meta[["Id", "Response"]].merge(
+        pred[["Id", "oof_pred"]].rename(columns={"oof_pred": "pred"}),
+        on="Id",
+        how="left"
+    )
 
-    df = meta.merge(pred.rename(columns={"oof_pred": "pred"}), on="Id", how="left", validate="one_to_one")
     df["pred"] = df["pred"].fillna(0.0).astype(np.float32)
     df["Response"] = df["Response"].astype(np.int8)
-    return df.sort_values(["Id"], kind="mergesort").reset_index(drop=True)
+
+    return df.sort_values("Id").reset_index(drop=True)
 
 
 @st.cache_data(show_spinner=False)
