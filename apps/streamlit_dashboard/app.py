@@ -8,8 +8,6 @@ sys.path.append(str(ROOT))
 
 
 import boto3
-import json
-import os
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
@@ -272,12 +270,12 @@ nav = st.sidebar.radio(
     ],
 )
 
-live_df = load_scoring_data()
-threshold_df = compute_threshold_sweep()
-budget_df = compute_budget_curve()
-fixed_precision_df = compute_fixed_precision_table()
-
 if nav == "Overview":
+    live_df = load_scoring_data()
+    threshold_df = compute_threshold_sweep()
+    budget_df = compute_budget_curve()
+    fixed_precision_df = compute_fixed_precision_table()
+
     n = len(live_df)
     fail_rate = float(live_df["Response"].mean() * 100.0)
     best = threshold_df.sort_values("mcc", ascending=False).iloc[0]
@@ -313,6 +311,7 @@ if nav == "Overview":
     b3.metric("Min-Cost Precision", f"{float(min_cost['precision']):.4f}")
 
 elif nav == "Threshold Explorer":
+    threshold_df = compute_threshold_sweep()
     st.subheader("Threshold Explorer")
     st.info("Adjust the threshold and see how detection quality and missed-failure risk change.")
 
@@ -343,6 +342,7 @@ elif nav == "Threshold Explorer":
     st.dataframe(confusion_label_table(row), use_container_width=True, hide_index=True)
 
 elif nav == "Inspection Budget Simulator":
+    budget_df = compute_budget_curve()
     st.subheader("Inspection Budget Simulator")
     st.info(
         "Inspection budget is the percentage of highest-risk parts selected for manual inspection. "
@@ -399,6 +399,7 @@ elif nav == "Inspection Budget Simulator":
     )
 
 elif nav == "Recall at Fixed Precision":
+    fixed_precision_df = compute_fixed_precision_table()
     st.subheader("Recall at Fixed Precision")
     st.info(
         "Precision shows how often alerts are correct. Recall shows how many failures are captured. "
@@ -423,6 +424,9 @@ elif nav == "Recall at Fixed Precision":
     st.dataframe(fixed_precision_df, use_container_width=True)
 
 elif nav == "Cost Simulator":
+    live_df = load_scoring_data()
+    threshold_df = compute_threshold_sweep()
+    budget_df = compute_budget_curve()
     st.subheader("Cost Simulator")
     st.info("Set business costs for missed failures and false alarms, then find the lowest-cost operating threshold.")
     st.code("Total Cost = FN * cost_FN + FP * cost_FP")
@@ -468,6 +472,7 @@ elif nav == "Cost Simulator":
     c3.metric("Recall @ Optimum", f"{best['recall']:.4f}")
 
 elif nav == "Model Insights":
+    live_df = load_scoring_data()
     st.subheader("Model Insights")
     st.info("Prediction Confidence Distribution")
     st.caption("Most parts should have low risk scores; failures should appear in higher scores")
@@ -489,6 +494,7 @@ elif nav == "Model Insights":
     st.dataframe(risk_tbl, use_container_width=True, hide_index=True)
 
 elif nav == "Failure Analysis":
+    live_df = load_scoring_data()
     st.subheader("Failure Analysis")
     st.info("This section analyzes MISSED FAILURES (false negatives)")
     st.warning("False negatives are critical because defective parts can pass without intervention.")
