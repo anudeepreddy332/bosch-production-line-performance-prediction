@@ -52,7 +52,7 @@ outputs/**/batch_stream_log.csv
 
 # Model artifacts
 outputs/models/
-
+models/*.pkl
 # =========================
 # 📜 Logs
 # =========================
