@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pandas as pd
+import joblib
 
 from src.logger import setup_logger
 from src.training.modeling import train_lightgbm_oof
@@ -34,13 +35,20 @@ def main() -> None:
 
     df = pd.read_parquet(dataset_path)
 
-    result = train_lightgbm_oof(
+    result, model = train_lightgbm_oof(
         df=df,
         feature_cols=FEATURE_COLS,
         model_name="baseline",
         output_oof_path=FEATURES_DIR / "oof_predictions_baseline.parquet",
         output_importance_path=OUTPUTS_DIR / "feature_importance_baseline.csv",
     )
+    MODEL_DIR = ROOT / "models"
+    MODEL_DIR.mkdir(exist_ok=True)
+
+    model_path = MODEL_DIR / "baseline_model.pkl"
+    joblib.dump(model, model_path)
+
+    logger.info(f"Saved model to {model_path}")
 
     update_training_summary(SUMMARY_PATH, "baseline", result)
     logger.info("Baseline training complete.")

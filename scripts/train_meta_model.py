@@ -4,6 +4,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import joblib
 
 from src.logger import setup_logger
 from src.training.modeling import train_lightgbm_oof
@@ -74,13 +75,18 @@ def main() -> None:
     meta_dataset_path = FEATURES_DIR / "meta_dataset.parquet"
     meta_dataset.to_parquet(meta_dataset_path, index=False)
 
-    result = train_lightgbm_oof(
+    result, model = train_lightgbm_oof(
         df=meta_dataset,
         feature_cols=META_FEATURES,
         model_name="meta_model",
         output_oof_path=FEATURES_DIR / "oof_predictions_final.parquet",
         output_importance_path=OUTPUTS_DIR / "feature_importance_meta_model.csv",
     )
+    MODEL_DIR = ROOT / "models"
+    MODEL_DIR.mkdir(exist_ok=True)
+    model_path = MODEL_DIR / "meta_model.pkl"
+    joblib.dump(model, model_path)
+    logger.info(f"Saved meta model to {model_path}")
 
     result["meta_dataset_path"] = str(meta_dataset_path)
     result["base_thresholds"] = {

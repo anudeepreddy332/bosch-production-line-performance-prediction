@@ -57,6 +57,7 @@ def train_lightgbm_oof(
     oof_pred = np.zeros(len(df), dtype=np.float32)
     feature_importance = np.zeros(len(feature_cols), dtype=np.float64)
     fold_metrics: list[dict[str, float]] = []
+    final_model = None
 
     logger.info("Training model=%s with %d rows and %d features", model_name, len(df), len(feature_cols))
 
@@ -90,6 +91,7 @@ def train_lightgbm_oof(
             eval_metric="binary_logloss",
             callbacks=[lgb.early_stopping(stopping_rounds=100, verbose=False)],
         )
+        final_model = model
 
         pred_valid = model.predict_proba(X_valid)[:, 1].astype(np.float32)
         oof_pred[valid_idx] = pred_valid
@@ -152,4 +154,4 @@ def train_lightgbm_oof(
         "best_threshold": float(best_thr),
         "oof_mcc": float(best_mcc),
         "fold_metrics": fold_metrics,
-    }
+    }, final_model

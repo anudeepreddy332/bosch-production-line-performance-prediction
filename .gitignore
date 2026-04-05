@@ -61,3 +61,9 @@ logs/
 *.log
 
 src/_deprecated/
+
+# Agent prompts
+agent.md
+system_design.md
+execution_rules.md
+tasks.md
