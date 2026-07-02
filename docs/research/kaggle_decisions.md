@@ -1722,6 +1722,92 @@ to measure. Next action: implement per §4/§5 on `kaggle/P0-raw-numeric-probe`,
 anchor and (once authorized) the Cell B/C training runs, then return here to fill Evidence/Outcome/
 Decision.
 
+### §Evidence — P0 experimental results (2026-07-02, `kaggle/P0-raw-numeric-probe`)
+
+**Regression anchor (must pass before any Cell B/C result is trusted):** `LEGACY_LGB_PARAMS` on
+Cell A's exact 51-column K5-A stack via `wide_modeling.train_wide_lgbm_oof` reproduced honest OOF
+MCC **0.32506** exactly (Δ = 0.00000, tolerance 1e-4), with `data_fingerprint` `e9df7ffff186b6fa`
+matching K5-A's original run byte-for-byte. `wide_modeling.py` confirmed a faithful superset of
+`train_lightgbm_oof`.
+
+| Cell | Features | Honest OOF MCC | Threshold | `capacity_bound` | `fold_best_iterations` | Δ vs K5-A (0.32506) | Runtime | Peak RSS | `data_fingerprint` |
+|---|---|---|---|---|---|---|---|---|---|
+| Regression (Cell A) | 51 | 0.32506 | 0.98 | True | [700]×5 | +0.00000 | 114.2s | ~3.3GB | `e9df7ffff186b6fa` |
+| Cell B (raw only) | 974 | 0.20450 | 0.88 | True | [700]×5 | n/a (informational) | 756.1s | ~7.5GB | `cf6f554939fe0fcd` |
+| Cell C (default) | 1025 | 0.37598 | 0.98 | True | [700]×5 | **+0.05092** | 1133.7s | ~7.1GB | `f4a25438ad901355` |
+| Cell C (high-capacity) | 1025 | 0.37892 | 0.96 | True | [2500]×5 | **+0.05386** | 3110.6s | ~7.3GB | `f4a25438ad901355` |
+
+**Capacity-bound finding:** every fold in every cell (Cell B, Cell C default, Cell C high-capacity)
+trained through its full `n_estimators` budget without early stopping ever triggering — Cell C
+high-capacity's per-fold `best_iteration_` were `[2500, 2500, 2500, 2500, 2500]` against
+`n_estimators=2500`, identical pattern to the 700-tree runs. Relieving capacity 700→2500 trees only
+added **+0.00294** to Cell C's OOF (0.37598 → 0.37892) — a small, monotonic gain, not a cliff —
+which rules out the false-negative-from-under-capacity risk the guard existed to catch. Both Cell C
+configurations independently land in `H_raw_dominant`; the guard did not need to veto either.
+
+**Implementation deviation (transparently logged, in-scope bug fix):** `build_dataset_p0_raw.py`
+originally added an explicit `"chunk_id"` string to `train_keep_cols` on top of the column already
+present via `DATASET_H_FEATURE_COLS` (`BASELINE_COLUMNS`), producing a duplicate-column DataFrame
+that pyarrow's `Table.from_pandas` rejected (`ValueError: Duplicate column names found`) ~40s into
+the first build attempt. Fixed by removing the redundant explicit column and adding a defensive
+`dupes` guard in `_build_side` that raises before the expensive raw read if `keep_cols` ever
+contains a duplicate name. Committed separately (`6f51707`, `P0 exp:` taxonomy) on the same approved
+branch — a same-file correctness fix, not new scope. Re-verified via a clean full rebuild (train
+1,183,747 × 1036 cols, test 1,183,748 × 1034 cols, 81.09s, ~7.4–7.8GB peak, no warnings).
+
+**Determinism:** all four training runs and the subsequent submission-CSV generation were each
+re-run independently once more from the same config/payload; OOF parquet and submission CSV output
+were byte-identical across runs (K5 protocol maintained).
+
+**Kaggle submission (Cell C high-capacity, the strongest cell):**
+`outputs/kaggle/submission_P0_cell_c_high_capacity.csv` — 1,183,748 rows, 1,473 positives, threshold
+0.96, generated from the existing trained payload (no retraining required — all 5 fold models were
+intact in `outputs/kaggle/models/p0_cell_c_high_capacity_model.pkl`) via the unmodified K2–K5
+submission pipeline (`generate_submission_K2.py` → `scripts/generate_submission.py`). Validated:
+exact `[Id, Response]` schema, row count matches `sample_submission` (1,183,748), 0 duplicate Ids,
+0 NaN, both columns int64, `Response ∈ {0,1}`, Id-set exact match, row order exactly matches
+`sample_submission`. MD5 `2a776b4decef546dc7fc1b203631256b`, SHA256
+`169d169873f7e0b5c4fc136feb58eef8399eae20b0edda3b75b7a359c8acc98c`. Determinism: byte-identical
+across 2 independent generation runs from the same payload.
+
+| Metric | Score |
+|---|---|
+| Public LB | **0.39226** |
+| Private LB | **0.40391** |
+
+Both public and private LB scores exceed the honest OOF (0.37892) — consistent with the label-free
+OOF→LB calibration pattern already confirmed 3× at K3-A/K4/K5-A (no evidence of a positive-bias
+break at this larger feature count). Private LB also clears K5-B's contaminated-OOF-derived
+best-to-date (0.33989) by **+0.06402**, and K5-A's honest best (0.33711) by **+0.06680** — the
+largest single-experiment private-LB gain in the program to date.
+
+### §Outcome — hypothesis classification
+
+**`H_raw_dominant` confirmed** at both capacities (default Δ +0.05092, high-capacity Δ +0.05386,
+both ≥ the +0.030 threshold), corroborated end-to-end by the Kaggle LB (private 0.40391 vs. K5-A's
+private 0.33711, Δ +0.06680 on the leaderboard — a larger gap than the OOF Δ, i.e. the raw signal's
+LB-visible value is at least as strong as its OOF-measured value, not weaker). `H_raw_modest` and
+`H_raw_not_dominant` are rejected. The capacity-bound guard was triggered in every cell but did not
+overturn the classification, since relieving capacity moved the result *further* into
+`H_raw_dominant`, not toward the boundary.
+
+### §Decision
+
+**P0 justifies proceeding to P1 at full scope.** The raw 968-column numeric matrix is not a marginal
+lever (unlike K4's timing-cohort features, +0.00431 OOF) — it is the single largest source of
+untapped signal found in the program so far, roughly an order of magnitude larger than any
+label-free lever discovered in K1–K5. The 0.52 private-MCC target from KDR-007 §0 remains ambitious
+but is now better anchored: P0 alone recovers most of the remaining gap between K5-B's prior best
+(0.33989 private) and the target, without any station/date/route engineering, feature selection, or
+tuning beyond the two LightGBM configs already run. P1 (station/line/route/temporal feature
+engineering + fold-safe selection + LightGBM tuning, per the P1 spec already delivered) is
+authorized to proceed to pre-registration (KDR-008) on its own timeline — not part of this closure.
+
+P0 is scientifically and procedurally complete: regression anchor green, all four cells measured,
+capacity-bound risk investigated and ruled out as a confound, one in-scope implementation bug found
+and fixed transparently, determinism confirmed twice (training OOF and submission CSV), and the
+Kaggle LB independently corroborates the OOF-based classification.
+
 ---
 
 ## Pending Kaggle experiment ledger
@@ -1740,4 +1826,4 @@ Decision.
 | KDR-006 | Pre-register K5: duplicate-group (feature-identity) leakage attribution | **Decided — K5 authorized (v2 ratified 2026-07-02)**: raw-signature keys (`key_date`/`key_numeric`/`key_nanpat`), Id-chains on `key_date`, K3-style A/B attribution |
 | K5 | Does raw-signature duplicate/chain identity carry leakage distinct from record-order/timing proximity? | **Complete** — Variant A (label-free) public 0.32330/private 0.33711 (OOF 0.32506, honest calibration 3rd-confirmed); Variant B (identity-label, contaminated OOF) public 0.33571/private 0.33989 — best model to date; `H_duplicate_material` confirmed; tag `K5-result` (2026-07-02) |
 | KDR-007 | Amend Track 2 objective (explain-the-gap → maximize private MCC, target ~0.52); pre-register P0: raw-numeric signal probe | **Decided — objective amended and P0 authorized (2026-07-02)**: `wide_modeling.py` (LightGBM-only, feature-agnostic trainer), Cell A/B/C factorial, Δ-over-K5-A decision variable |
-| P0 | Does the raw 968-column numeric matrix carry MCC signal, standalone and marginally over K5-A's magic/duplicate stack, large enough to justify P1 deep raw-feature engineering? | **Implementation in progress** |
+| P0 | Does the raw 968-column numeric matrix carry MCC signal, standalone and marginally over K5-A's magic/duplicate stack, large enough to justify P1 deep raw-feature engineering? | **Complete** — Cell C default OOF 0.37598 (Δ+0.05092), high-capacity OOF 0.37892 (Δ+0.05386); public LB 0.39226 / private LB 0.40391 (best to date, +0.06680 private over K5-A); `H_raw_dominant` confirmed; P1 authorized; tag `P0-result` (2026-07-02) |
