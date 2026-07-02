@@ -121,6 +121,10 @@ def _build_side(
     out_path: Path,
     side: str,
 ) -> None:
+    dupes = {c for c in keep_cols if keep_cols.count(c) > 1}
+    if dupes:
+        raise RuntimeError(f"[{side}] duplicate column names in keep_cols: {sorted(dupes)}")
+
     print(f"[{side}] reading raw numeric matrix (read-only, float32-enforced) ...")
     raw = _load_raw_numeric(raw_path, raw_feature_cols)
     print(f"[{side}] computing 6 global aggregates ...")
@@ -137,8 +141,10 @@ def _build_side(
     gc.collect()
 
     _assert_float32(out, [*raw_feature_cols, *_AGGREGATE_FLOAT_COLS], f"final {side} output")
-    missing_raw_rows = int(out[raw_feature_cols[0]].isna().sum()) if raw_feature_cols else 0
-    print(f"[{side}] rows={len(out)} cols={len(out.columns)} (id-unmatched-to-raw rows for first raw col: {missing_raw_rows})")
+    # NaN in a single raw sensor column is expected Bosch sparsity (a part may skip that
+    # station), not a merge failure -- row-count asserts above are what guard the merge itself.
+    first_col_nan = int(out[raw_feature_cols[0]].isna().sum()) if raw_feature_cols else 0
+    print(f"[{side}] rows={len(out)} cols={len(out.columns)} (NaN rows in raw col {raw_feature_cols[0]!r}: {first_col_nan} -- expected sparsity, not a merge signal)")
 
     FEATURES_DIR.mkdir(parents=True, exist_ok=True)
     out.to_parquet(out_path, index=False)
@@ -169,7 +175,8 @@ def main() -> None:
     train_base["cv_fold"] = train_base["cv_fold"].astype(np.int16)
     print(f"merged cv_fold onto train_base (train-only, from {DATASET_H_IN.name})")
 
-    train_keep_cols = ["Response", "chunk_id", "cv_fold", *BASE_KEEP_COLS]
+    # chunk_id is already part of DATASET_H_FEATURE_COLS (inside BASE_KEEP_COLS) -- do not add it again.
+    train_keep_cols = ["Response", "cv_fold", *BASE_KEEP_COLS]
     test_keep_cols = [*BASE_KEEP_COLS]
 
     _build_side(TRAIN_NUMERIC_RAW, train_base, train_raw_cols, train_keep_cols, TRAIN_OUT, side="train")
