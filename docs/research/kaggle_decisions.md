@@ -1810,6 +1810,194 @@ Kaggle LB independently corroborates the OOF-based classification.
 
 ---
 
+## KDR-008 — Pre-register P1: station-temporal feature engineering + capacity tuning
+
+### §0 — Trigger and governance context
+
+P0 closed 2026-07-02 (`P0-result`, `kaggle-main` @ `93cb1a0`): `H_raw_dominant` confirmed (Cell C-HC
+honest OOF 0.37892, Δ+0.05386 over K5-A), Kaggle public 0.39226 / private 0.40391, best in program.
+KDR-007 §Decision authorized P1 to proceed to pre-registration. This KDR supersedes KDR-006 §4a's
+rejection of per-station timing detail — that rejection was scoped to the leakage-attribution
+objective, which KDR-007 §0 retired.
+
+### §1 — Imported priors (P0, no re-derivation)
+
+(1) Raw matrix carries 81% of Cell C-HC's trained gain; only ~10% of features are zero-gain → no
+per-column selection in P1. (2) `p0_row_std` ranks #6 of 1025 → value-based aggregations add
+capacity-relief value over the columns they summarize — validates a slim, value-based Family S/L.
+(3) Capacity-bound at 2500 trees but the trees-axis gain is flattening (+0.00294 for 700→2500) →
+capacity-per-tree (`num_leaves`) is the live tuning axis, not more trees. (4) Standalone family
+reads are uninformative (Cell B 0.20450 vs. marginal +0.05386) → P1 measures marginal gain only, at
+the fixed P0 Cell C recipe. (5) Honest OOF underestimates private LB by +0.012–0.025 across 4
+label-free submissions → OOF stays the decision floor; LB confirms once, at the end. (6) Raw-gain
+concentrates in stations L3_S30 (17.3%), L3_S29 (12.0%), L1_S24 (7.6%) — 37% of all trained gain in
+3 of ~50 stations.
+
+### §2 — Objective, hypotheses, decision variable
+
+**Objective:** add the last unmined non-categorical information axis (per-station timing) plus
+capacity-relief aggregates, then tune capacity-per-tree — maximizing honest OOF MCC over the P0 Cell
+C-HC baseline.
+
+**Decision variable:** Δ_P1 = best honest OOF MCC across all P1 runs − **0.37892** (P0 Cell C-HC).
+
+| Hypothesis | Δ_P1 | Interpretation |
+|---|---|---|
+| **H_station_temporal_strong** | ≥ +0.020 | New axis + capacity tuning still yield P0-scale-adjacent gains; P2 proceeds at full scope, 0.52 target credible-path intact. |
+| **H_station_temporal_moderate** | +0.007 ≤ Δ < +0.020 | Real but K-era-sized; P2 proceeds, target-arrival re-estimated. |
+| **H_station_temporal_weak** | < +0.007 | Raw-adjacent engineering saturated under this recipe; P2 pivots to a cheap categorical probe, then P3 ensembling becomes the primary lever; 0.52 target formally reassessed. |
+
+**Pre-registered attribution (reported, non-gating):** ΔD = R1 − 0.37892; ΔS|D = R2 − R1; Δtune =
+best tuned − R2.
+
+### §3 — Feature specification (exhaustive for P1 — no categorical, no selection)
+
+**Base (unchanged):** the exact P0 Cell C feature set — 968 raw numeric + 6 `p0_*` aggregates +
+K5-A's 51 (1025 cols).
+
+**Family D — per-station timing (57 cols), from `data/processed/{train,test}_date.parquet`** (1156
+date cols, 52 stations, schema parity train/test asserted at build):
+- `d_st__{L}_{S}` (52): row-wise min over the station's date columns, minus row `start_time`
+  (relative offsets; absolute anchor already in stack), float32, NaN if station unvisited.
+- `d_week_pos_start` (1): `start_time % 1680` (1 week = 1680 in the raw 6-minute date unit, matching
+  `src/features/pipeline.py`'s existing `part_of_week` precedent).
+- `d_week_pos_end` (1): `(start_time + duration) % 1680`, computed inline from the two existing
+  base-stack columns — **no separate `d_end_time` column is materialized.**
+  `d_end_time = date_cols.max(axis=1)` was considered and rejected: it is a perfect linear
+  combination of `start_time` and `duration` (already in the base stack, per
+  `scripts/build_dataset_baseline.py:108-110`: `duration = end_time − start_time`), contributing zero
+  new information.
+- `d_nstations` (1): count of non-NaN station offsets.
+- `d_transit_mean`, `d_transit_max` (2): mean/max of consecutive deltas over the row's visited-station
+  offsets sorted ascending (NaN-safe row-wise sort over ≤52 values).
+
+**Family S+L — station/line numeric aggregates (108 cols), computed from the existing
+`dataset_p0_raw_{train,test}.parquet`** (no re-read of `train/test_numeric.parquet`):
+`s_mean__{L}_{S}`, `s_std__{L}_{S}` per station with ≥1 numeric column (50, confirmed by schema
+introspection), `l_mean__{L}`, `l_std__{L}` per line (4 lines, confirmed by schema introspection →
+8 cols). Value-based only — no presence flags, no counts (`p0_nnz` ranks #249, evidence that
+presence/count information is already saturated by `key_nanpat`/`density_ratio`/chunk features).
+
+**Degenerate-case handling (required):** `L3_S32` has exactly 1 numeric column
+(`L3_S32_F3850`). Row-wise `std` over a single value is left as `NaN` **by design** — not computed
+via `nanstd` (which would silently return 0.0 for a single sample under the codebase's ddof=0
+convention), not imputed. The computation reuses P0's exact
+`warnings.catch_warnings(); warnings.simplefilter("ignore", category=RuntimeWarning)` guard
+(`build_dataset_p0_raw.py`) around every aggregate reduction; no new suppression pattern is
+introduced.
+
+**Output:** one side-table `data/features/dataset_p1_dt_{train,test}.parquet` (`Id` + 165 cols
+[57 + 108], float32), merged at train time on `Id` (`validate="one_to_one"`, row-count asserts).
+**Full P1 width ≈ 1190 features** (1025 base + 57 Family D + 108 Family S/L).
+
+**Hard exclusions (frozen, do not add):** categorical matrix (P2); `DUPLICATE_LABEL_COLS`; per-column
+selection; within-station date spans and station-pair transit matrices (P2 candidates if D lands
+Strong); Family R (route summaries — cut, redundant with `key_nanpat`/`p0_nnz`); presence/nnz
+features.
+
+### §4 — Experimental matrix (sequential, fixed order, marginal-only)
+
+All runs: `train_wide_lgbm_oof`, chunk-aware 5-fold CV, persisted `cv_fold` verification, seed 42,
+threshold via `search_best_mcc_threshold` on full OOF.
+
+| Run | Features | Params | Purpose |
+|---|---|---|---|
+| R0 | K5-A 51 | LEGACY | Regression anchor — must reproduce 0.32506 ± 1e-4 before any P1 result is read |
+| R1 `p1_d` | base 1025 + D 57 | HIGH_CAPACITY | ΔD (decision-grade) |
+| R2 `p1_ds` | R1 + S/L 108 | HIGH_CAPACITY | ΔS\|D (decision-grade); also serves as the `num_leaves=63` tuning-axis anchor for the final feature set — no separate baseline rerun needed |
+| R3 | best feature set from {R1, R2} | HC with `num_leaves=127` | Tuning: leaves axis, step 1 |
+| R4 (conditional) | same | HC with `num_leaves=255` | Run only if R3 improves over R2's OOF MCC (the `num_leaves=63` anchor). If R3 shows no improvement, skip R4 and proceed directly to R5 at `num_leaves=127`. |
+| R5 | best-leaves config from {R2, R3, R4} | HC + `min_child_samples=20` | Tuning: regularization axis |
+| R6 (conditional) | same | best config, `n_estimators=4000`, `lr=0.015` | Only if R3–R5 winner is still `capacity_bound` **and** Δtune ≥ +0.002 |
+
+**Determinism (2× byte-identical, K5/P0 protocol):** build outputs, R1, R2, and the single winning
+configuration. Tuning non-winners exempt (pre-registered compute-discipline exemption). **Compute
+cap:** ≤12 full-scale training runs on the branch; exceeding requires new authorization.
+
+### §5 — Memory, model, and validation design
+
+**Build strategy:** the P0/`build_dataset_baseline.py` precedent is reused exactly — one full
+`pd.read_parquet` per source per side, no column-batching. Family D and Family S/L are computed as
+two strictly sequential passes within each side: Family D reads the full date matrix, computes all
+57 columns, and fully releases the date DataFrame (`del` + `gc.collect()`) before Family S/L begins
+its own full read of `dataset_p0_raw_{side}.parquet`. Train and test sides remain strictly sequential
+(never concurrent), as in P0.
+
+**Memory estimates (derived from P0's measured peak, not assumed):** Family D pass ≈ **9.5GB peak**
+per side (1156 float32 date columns × ~1.18M rows ≈ 5.15GB raw, scaled from P0's measured
+~7.4–7.8GB peak on its 968-column numeric matrix by the 1156/968 column ratio). Family S/L pass ≈
+**5–6GB peak** per side (reads the smaller, already-built `dataset_p0_raw` parquet). Both within the
+16GB machine's headroom given the sequential-release discipline; peak is never the sum of the two
+passes.
+
+**CV reuse:** `chunk_id` and `cv_fold` merged from the existing `dataset_p0_raw_{train}.parquet`
+(never recomputed); `verify_persisted_fold_assignment` guard applies as in P0.
+
+**Model:** LightGBM only, via the existing `src.kaggle.wide_modeling` trainer, **unmodified**. R1/R2
+use `HIGH_CAPACITY_LGB_PARAMS` unchanged; R3–R6 vary only `num_leaves`/`min_child_samples`/
+`n_estimators`/`learning_rate` inside the already-evolvable hyperparameter dict (KDR-007 §5a) — no
+trainer-contract amendment.
+
+**Capacity guard:** unchanged from P0 — `fold_best_iterations` inspected per run; only a
+capacity-unbound result may be read as falsifying `H_station_temporal_moderate`/`_weak`.
+
+**Regression anchor (mandatory, R0):** `LEGACY_LGB_PARAMS` on K5-A's exact 51-column feature stack
+must reproduce 0.32506 ± 1e-4 before any P1 result is trusted — identical requirement and tolerance
+to P0.
+
+**Determinism:** 2 independent runs of the same config must produce byte-identical OOF parquet
+output (K5/P0 protocol); `data_fingerprint` recorded per run.
+
+**Validation guards:** float32 dtype assertions on all Family D/S/L columns; row-count asserts around
+every merge; `validate="one_to_one"` on all `merge(on="Id")` calls; schema/column-order equality
+assert between train and test date columns and between train and test raw numeric columns before any
+read; station/line group counts asserted against the schema-derived expectation (52 date stations,
+50 numeric stations, 4 lines) rather than hardcoded.
+
+### §6 — Contamination safeguards
+
+All Family D and Family S/L features are label-free (no `Response` lookups, no `DUPLICATE_LABEL_COLS`)
+→ every OOF number is honest by construction. Relative station offsets are start-anchored and
+introduce no new CV-integrity concern (absolute `start_time` is already in the stack; `chunk_id`
+grouping unchanged). Firewall grep before every commit.
+
+### §7 — Kaggle submission
+
+Exactly **one** P1 submission (best model), requiring separate explicit authorization, generated via
+the unmodified `generate_submission_K2.py` pipeline with the full P0 validation battery (schema, row
+count, dup-Ids, NaN, int 0/1, row order, md5/sha256, 2× generation determinism).
+
+### §8 — Git strategy
+
+KDR-008 committed and pushed to `kaggle-main` first; branch `kaggle/P1-station-temporal` cut from
+that tip; commits `P1 exp:` / `P1 eval:` / `P1 docs:`; tag `P1-result` (annotated) only after
+evidence; merge `--no-ff` to `kaggle-main` only, never `main`; branch never pushed, deleted after
+merge. Firewall grep (`import.*kaggle` outside `src/kaggle/`/`scripts/kaggle/`) checked before every
+commit.
+
+### §9 — Documentation updates required after P1 evidence lands
+
+- `docs/research/kaggle_decisions.md` — fill KDR-008 Evidence/Outcome/Decision + hypothesis
+  classification (`H_station_temporal_strong`/`_moderate`/`_weak`) + ledger update.
+- `docs/agent_memory/claude_state.md` — P1 record, attribution (ΔD/ΔS|D/Δtune), P2 go/no-go.
+- `docs/ml_system_tracks.md` — Track 2 progress/state line.
+- **Not touched:** `decisions.md`, README, case study, Track 1/3 docs, `CLAUDE.md`,
+  `src/kaggle/wide_modeling.py`.
+
+### §10 — Decision, confidence, next action
+
+**Decided — P1 authorized** (architecture approved across an initial design pass and a
+first-principles review that removed Family R, cut the 99.9%-selection step, cut the trainer
+amendment, cut the 8000-tree convergence stage, and re-ranked remaining tasks by MCC-per-hour; a
+subsequent implementation-readiness check found and fixed two correctness defects — the redundant
+`d_end_time` feature and the wrong weekly-period constant — plus a build-strategy correction and a
+degenerate-case handling requirement). Confidence in the *design* is high; confidence in the
+*outcome* is deliberately left open. Next action: implement per §3/§5 on
+`kaggle/P1-station-temporal`, run the regression anchor and (once authorized) R1–R6, then return here
+to fill Evidence/Outcome/Decision.
+
+---
+
 ## Pending Kaggle experiment ledger
 
 | ID | Pre-registered question | Status |
@@ -1827,3 +2015,5 @@ Kaggle LB independently corroborates the OOF-based classification.
 | K5 | Does raw-signature duplicate/chain identity carry leakage distinct from record-order/timing proximity? | **Complete** — Variant A (label-free) public 0.32330/private 0.33711 (OOF 0.32506, honest calibration 3rd-confirmed); Variant B (identity-label, contaminated OOF) public 0.33571/private 0.33989 — best model to date; `H_duplicate_material` confirmed; tag `K5-result` (2026-07-02) |
 | KDR-007 | Amend Track 2 objective (explain-the-gap → maximize private MCC, target ~0.52); pre-register P0: raw-numeric signal probe | **Decided — objective amended and P0 authorized (2026-07-02)**: `wide_modeling.py` (LightGBM-only, feature-agnostic trainer), Cell A/B/C factorial, Δ-over-K5-A decision variable |
 | P0 | Does the raw 968-column numeric matrix carry MCC signal, standalone and marginally over K5-A's magic/duplicate stack, large enough to justify P1 deep raw-feature engineering? | **Complete** — Cell C default OOF 0.37598 (Δ+0.05092), high-capacity OOF 0.37892 (Δ+0.05386); public LB 0.39226 / private LB 0.40391 (best to date, +0.06680 private over K5-A); `H_raw_dominant` confirmed; P1 authorized; tag `P0-result` (2026-07-02) |
+| KDR-008 | Pre-register P1: station-temporal (per-station date offsets, weekly position, transit) + station/line numeric aggregates, layered on P0 Cell C, plus LightGBM leaves/min-child tuning | **Decided — P1 authorized (2026-07-02)**: 57-col Family D + 108-col Family S/L (schema-derived counts), Δ-over-P0-Cell-C-HC decision variable, R0–R6 experimental matrix |
+| P1 | Do per-station timing features and station/line numeric aggregates add over P0 Cell C-HC, large enough to justify P2 (categorical) at full scope? | **Implementation in progress** |
