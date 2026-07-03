@@ -1,27 +1,10 @@
 # Bosch Production Line Failure Decision System
 
-> ## ⚠️ WORLD-B HISTORICAL / UNVERIFIED — READ BEFORE CITING ANY NUMBER BELOW
->
-> Every quantitative operating point in this document (recall, precision, cost,
-> thresholds, MCC, the 1,183,747-row dataset size, etc.) was computed from
-> `data/features/oof_predictions_context_meta_v2_blend.parquet` and related
-> `outputs/*.json` files generated from it. The raw, intermediate, and model
-> artifacts that produced that blend file were **deliberately deleted** from
-> this repository for packaging size and cleanliness (see `data/README.md`),
-> and **no training script in this repo's git history reproduces it** on any
-> branch.
->
-> **These numbers are NOT reproducible from the code currently committed to
-> this repository.** They are preserved here as a historical record of a past
-> experiment and a worked example of the decision-system methodology — not as
-> a current, verifiable claim about model or system performance.
->
-> The only metrics that are currently reproducible are the 50,000-row dev-sample
-> OOF MCC values in `outputs/training_summary.json`, tabulated with exact figures
-> and regeneration commands (both dev-sample and full-scale) in
-> [`docs/reproducible_metrics_report.md`](reproducible_metrics_report.md). Until
-> a full-scale run is executed and reviewed, full-scale recall/precision/cost
-> numbers should be treated as **unknown**, not as the values below.
+> **Note on data provenance:** the RP2 numbers in this document (Executive Summary and §7's
+> "authoritative, reproducible" table) are reproducible today from committed code. Section 7 also
+> preserves an older set of operating points from a since-deleted artifact, kept only as a worked
+> example of the decision-system *methodology* — see the sidebar directly above that table for the
+> full provenance note before citing any number from that subsection specifically.
 
 ## Executive Summary
 We converted a competition-style ML workflow into a production decision system for failure prevention on a highly imbalanced manufacturing problem (about **0.58% failures**). Instead of optimizing only MCC, we optimized business outcomes: failures caught, inspection load, and cost.
@@ -133,7 +116,21 @@ Key deployment findings (DR-011 through DR-015):
 
 ### Historical World-B Operating Points (unverifiable; for methodology illustration only)
 
-From `outputs/production_decision_summary.json` and related CSVs (see ⚠️ warning above — artifacts deleted, not reproducible from current code):
+> **⚠️ Provenance sidebar — read before citing any number in this subsection.** Every operating
+> point below (recall, precision, cost, thresholds, the 1,183,747-row dataset size) was computed
+> from `data/features/oof_predictions_context_meta_v2_blend.parquet` and related `outputs/*.json`
+> files generated from it. The raw, intermediate, and model artifacts that produced that blend file
+> were **deliberately deleted** from this repository for packaging size and cleanliness (see
+> `data/README.md`), and **no training script in this repo's git history reproduces it**. **These
+> numbers are NOT reproducible from the code currently committed to this repository** — they are
+> preserved as a historical record and a worked example of the decision-system methodology (how a
+> cost model turns scores into an operating point), not as a current, verifiable performance claim.
+> The reproducible numbers are the RP2 table in §7 above and the dev-sample OOF MCC values in
+> `outputs/training_summary.json`, tabulated with regeneration commands in
+> [`docs/reproducible_metrics_report.md`](reproducible_metrics_report.md).
+
+From `outputs/production_decision_summary.json` and related CSVs (see the provenance sidebar
+immediately above — artifacts deleted, not reproducible from current code):
 
 ### Minimum Cost (FN=100, FP=5)
 - Threshold: `0.23`
@@ -238,7 +235,38 @@ Start point options:
 
 ---
 
-## 13. Impact Summary
+## 13. Related Research: the Kaggle Leaderboard Track (separate, frozen)
+
+**This section is informational context, not a production claim.** Everything above this section
+describes the deployable decision system; this project's charter (`bosch_agent.md`,
+`system_design.md`) forbids leaderboard-driven leakage tricks from ever entering that system, and
+none of the numbers below informed any decision above.
+
+Separately, this repository also contains a rigorously governed Kaggle leaderboard-optimization
+track (`docs/research/kaggle_decisions.md`, KDR-001–KDR-009), run specifically to *measure* how
+much of this competition's famous ~0.50-MCC public leaderboard ceiling comes from mechanisms that
+are Kaggle-legal but not deployable — record-adjacency leakage, duplicate/identity signature
+lookups, and eventually just far more raw signal plus model capacity than a production feature
+contract would carry. Nine experiments, six pre-registered hypothesis classifications, all
+confident, none inconclusive. Canonical numbers: [`results/leaderboard.json`](../results/leaderboard.json).
+
+| Experiment | Mechanism | Private LB MCC |
+|---|---|---|
+| K1 | Frozen production model, reproducibility baseline | 0.16160 |
+| K2 | Record-adjacency magic (full) | 0.32702 |
+| K5-B | Identity-conditioned label lookup | 0.33989 |
+| P0 | Raw ~968-column numeric matrix, high-capacity LightGBM | 0.40391 |
+| **P1** | Station-temporal features + capacity tuning | **0.41917** (program best) |
+
+The track is now **frozen** (KDR-009, tag `track2-frozen`): the original ~0.52 target is not
+defended by the evidence gathered, and the revised realistic forward estimate is ~0.435–0.445 via
+further tuning/blending, not further leakage engineering. Full attribution, the complete 9-row
+ladder, and the postmortem are in `docs/research/kaggle_decisions.md` (KDR-009) and summarized in
+the [README](../README.md#results).
+
+---
+
+## 14. Impact Summary
 This system moves the project from model experimentation to operational decision support:
 - quantifies recall-vs-cost explicitly,
 - makes inspection capacity a first-class control,
