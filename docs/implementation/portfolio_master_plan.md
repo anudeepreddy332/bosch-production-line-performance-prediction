@@ -64,7 +64,7 @@ Scope is fixed by the audit plus exactly eight ratified amendments:
 
 | Phase | Name                                   | Status      | Checkpoint | Effort    |
 |-------|-----------------------------------------|-------------|------------|-----------|
-| PF0   | Research freeze & unification + registry | IN PROGRESS | CP0        | 4–7 h     |
+| PF0   | Research freeze & unification + registry | AWAITING REVIEW (CP0) | CP0 | 4–7 h |
 | PF1   | Headline documents                     | NOT STARTED | CP1        | 8–12 h    |
 | PF2   | Code hygiene                           | NOT STARTED | CP2        | 11–15 h   |
 | PF3   | Tests + CI (M1 gate)                   | NOT STARTED | CP3        | 7–9 h     |
@@ -136,7 +136,7 @@ PF8 remains an elective backlog thereafter.
 
 ### PF0 — Research freeze, unification, registry, ledger
 
-**Status: IN PROGRESS**
+**Status: AWAITING REVIEW (CP0)**
 
 - **Objective:** `main` becomes the single public source of truth; Track 2 formally frozen; the
   results registry and this ledger established; metadata table stakes in place.
@@ -176,6 +176,14 @@ PF8 remains an elective backlog thereafter.
   LICENSE/.env.example/gitignore/pycache — `--no-ff` merge, tag `track2-frozen`, push with tags,
   delete obsolete branches.
 - **Stopping point:** CP0. **Effort: 4–7 h.**
+- **Execution record (2026-07-03):** FF merge `main` `b058e58`→`2644487` (identical to
+  `kaggle-main`) pushed before this branch was cut; all 22 tags confirmed reachable from `main`
+  pre-merge; firewall grep empty; `leaderboard.json` validated (9 rows, every MCC value and 8/9
+  fingerprints grep-matched against `kaggle_decisions.md`, P1's fingerprint provenance caveat
+  documented inline); KDR-009 diff confirmed append-only (adds lines only). No pycache files were
+  tracked and `.gitignore` already covered `__pycache__/` — that sub-item required no change.
+  Full command-level evidence and final branch-deletion/GitHub-metadata confirmation are recorded
+  in the CP0 report delivered alongside this commit, not duplicated here.
 
 ### PF1 — Headline documents
 
