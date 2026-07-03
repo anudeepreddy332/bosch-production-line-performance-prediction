@@ -367,7 +367,10 @@ PF8 remains an elective backlog thereafter.
   `actions/setup-python@v5` deprecation-warning annotations about GitHub's underlying Node.js
   runtime (not this workflow's own configuration) — cosmetic, no action required; (2) the
   `src/inference/payload.py` → `scripts.ops.validate_model_payload` layering direction noted
-  in PF2 remains unresolved (out of PF3's scope too).
+  in PF2 remains unresolved (out of PF3's scope too). PR #3 merged (`--merge`, real merge
+  commit `b98773f`); CI confirmed green on `main` itself immediately after (`push` trigger,
+  run `28642207678`, success) — the full checklist item "CI green on PR and on `main`; 3
+  consecutive re-runs green" is now satisfied end-to-end.
 
 ### PF4 — Recruiter dashboard + hosting
 
