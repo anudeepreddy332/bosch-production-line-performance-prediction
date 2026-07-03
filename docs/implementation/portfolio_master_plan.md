@@ -68,7 +68,7 @@ Scope is fixed by the audit plus exactly eight ratified amendments:
 | PF1   | Headline documents                     | COMPLETE    | CP1 ✓ approved 2026-07-03 | 8–12 h |
 | PF2   | Code hygiene                           | COMPLETE    | CP2 ✓ approved 2026-07-03 | 11–15 h |
 | PF3   | Tests + CI (M1 gate)                   | COMPLETE    | CP3 ✓ approved 2026-07-03 | 7–9 h |
-| PF4   | Recruiter dashboard + hosting          | NOT STARTED | CP4        | 18–28 h   |
+| PF4   | Recruiter dashboard + hosting          | IN PROGRESS | CP4        | 18–28 h   |
 | PF5   | Documentation site                     | NOT STARTED | CP5        | 8–12 h    |
 | PF6   | Artifacts & v1.0.0 (M2 gate)           | NOT STARTED | CP6        | 4–6 h     |
 | PF7   | Live tier (OPTIONAL, gated at CP6)     | NOT STARTED | —          | 5–8 h     |
@@ -383,7 +383,7 @@ PF8 remains an elective backlog thereafter.
 
 ### PF4 — Recruiter dashboard + hosting
 
-**Status: NOT STARTED**
+**Status: IN PROGRESS**
 
 - **Objective:** one URL — `bosch.themachinist.org` — that tells the whole story in 90 seconds.
 - **Depends on:** M1; `results/leaderboard.json`. User-side: Cloudflare account + DNS (needed only
@@ -544,6 +544,15 @@ PF8. Correctness bugs are fixed in the phase that finds them and noted in that p
   the script already required it and the manifest already lacked it before this phase touched the
   file). Add `matplotlib` to `requirements.txt` whenever this script's dependencies are next
   audited.
+- 2026-07-03, PF4: `docs/reproducible_metrics_report.md` §1 ("World A") is stale — it states "no
+  full-scale run on record" and quotes 50,000-row dev-sample OOF MCC values, but the actual
+  `outputs/training_summary.json` and `data/features/oof_predictions_{baseline,dataset_g,
+  dataset_h,final}.parquet` currently on disk are a genuine full-scale run (1,183,747 rows,
+  meta_model OOF MCC 0.14942), i.e. exactly the §3a sequence the doc itself describes as "not yet
+  run." The doc was not updated after that run happened. PF4's dashboard export reads directly
+  from the current `outputs/training_summary.json`/parquets (the actual artifacts), not from this
+  doc's stale prose, so no dashboard numbers are affected — but the doc itself should be refreshed
+  to reflect the full-scale result whenever next touched.
 
 ## 12. Ledger protocol
 
