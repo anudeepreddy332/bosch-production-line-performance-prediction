@@ -648,12 +648,19 @@ PF8 remains an elective backlog thereafter.
   exactly after reloading via `joblib.load`. Final release: 8 assets (4 tracked docs/metrics files +
   4 model pickles), all correct sizes/fingerprints, `draft: true`. Firewall grep clean; `gitleaks`
   clean (146 commits, git history); all 23 pre-existing tags confirmed reachable from `main`.
-- **Launch status:** Release intentionally left as a **draft** pending one more explicit
-  confirmation from the user to publish (make it public) — publishing is the one action in this
-  phase categorized as "visible to others" under the assistant's own operating rules, and the
-  release workflow was deliberately designed to never auto-publish. See CP6 report for the
-  specific ask.
-- **CP6 outcome (2026-07-03): APPROVED**, pending final publish confirmation (see above).
+- **Launch status: PUBLISHED.** User explicitly authorized publishing; `gh release edit v1.0.0
+  --draft=false` run and verified via the public, unauthenticated GitHub API
+  (`draft: false`). Post-publish verification: release page returns 200 unauthenticated; tag
+  resolves (`git ls-remote --tags origin v1.0.0`); all 8 assets downloaded from the public
+  `releases/download/v1.0.0/...` URLs with byte-exact sizes; the 4 downloaded model pickles
+  reloaded via `joblib.load` with `data_fingerprint` matching `outputs/training_summary.json`
+  exactly; one stale line in the auto-generated release notes ("This release is a draft --
+  publish it explicitly...", accurate when `release.yml` wrote it pre-publish, stale once
+  published) caught and corrected via `gh release edit --notes`; dashboard
+  (`bosch.themachinist.org`, all 4 routes) and docs site (`/docs/`, `/docs/architecture/`,
+  `/docs/model_card/`) reconfirmed live (200) after publish. **M2 milestone reached**: dashboard
+  live, docs site live, `v1.0.0` released and public.
+- **CP6 outcome (2026-07-03): APPROVED.** v1.0.0 published.
 
 ### PF7 — Live tier (OPTIONAL — gated on explicit CP6 go/no-go)
 
