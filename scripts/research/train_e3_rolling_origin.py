@@ -58,7 +58,7 @@ Test rows' features could reflect future-chunk statistics (some test chunks were
 in the same CV fold's *training* side, leaking future-period label statistics).
 E3 fixes this: features for test rows use only training-window statistics.
 
-Reproduce: PYTHONPATH=. python scripts/train_e3_rolling_origin.py
+Reproduce: PYTHONPATH=. python scripts/research/train_e3_rolling_origin.py
            (requires dataset_baseline.parquet + path_metadata.parquet)
 
 Returns all evidence to Opus for interpretation. Sonnet does not interpret.
@@ -87,7 +87,7 @@ from src.training.modeling import compute_data_fingerprint, search_best_mcc_thre
 
 logger = setup_logger(__name__)
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 FEATURES_DIR = ROOT / "data" / "features"
 OUTPUTS_DIR = ROOT / "outputs"
 
@@ -636,7 +636,7 @@ def main() -> None:
     summary = {
         "experiment": "E3 (RP2-1)",
         "description": "Honest temporal re-baseline: rolling-origin CV with past-only label-feature recompute",
-        "reproduce": "PYTHONPATH=. python scripts/train_e3_rolling_origin.py",
+        "reproduce": "PYTHONPATH=. python scripts/research/train_e3_rolling_origin.py",
         "references": {
             "pre_registration": "DR-011",
             "program": "RP2",

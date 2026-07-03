@@ -16,7 +16,7 @@ from src.logger import setup_logger
 
 logger = setup_logger(__name__)
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 PROCESSED_DIR = ROOT / "data" / "processed"
 FEATURES_DIR = ROOT / "data" / "features"
 
@@ -157,7 +157,7 @@ def main() -> None:
 
     if not numeric_path.exists() or not date_path.exists():
         raise FileNotFoundError(
-            "Missing required processed files. Run scripts/prepare_data.py first to create train_numeric.parquet and train_date.parquet"
+            "Missing required processed files. Run scripts/pipeline/prepare_data.py first to create train_numeric.parquet and train_date.parquet"
         )
 
     FEATURES_DIR.mkdir(parents=True, exist_ok=True)

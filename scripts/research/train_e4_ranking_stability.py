@@ -40,7 +40,7 @@ Stopping condition: run, record evidence, return to Opus. Do NOT implement
 any intervention. RP1 remains frozen.
 
 Reproduce:
-    PYTHONPATH=. python scripts/train_e4_ranking_stability.py
+    PYTHONPATH=. python scripts/research/train_e4_ranking_stability.py
     (requires data/features/dataset_baseline.parquet + path_metadata.parquet
                 + data/features/dataset_h.parquet)
 """
@@ -82,7 +82,7 @@ from src.training.modeling import compute_data_fingerprint, search_best_mcc_thre
 
 logger = setup_logger(__name__)
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 FEATURES_DIR = ROOT / "data" / "features"
 OUTPUTS_DIR = ROOT / "outputs"
 
@@ -1167,7 +1167,7 @@ def main() -> None:
     summary = {
         "experiment": "E4 (RP2 diagnostic)",
         "description": "Ranking-stability & calibration decomposition",
-        "reproduce": "PYTHONPATH=. python scripts/train_e4_ranking_stability.py",
+        "reproduce": "PYTHONPATH=. python scripts/research/train_e4_ranking_stability.py",
         "references": {
             "pre_registration": "DR-013",
             "program": "RP2",

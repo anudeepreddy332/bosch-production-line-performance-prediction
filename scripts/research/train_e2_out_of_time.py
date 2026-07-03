@@ -35,7 +35,7 @@ from src.training.modeling import compute_data_fingerprint, search_best_mcc_thre
 
 logger = setup_logger(__name__)
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 FEATURES_DIR = ROOT / "data" / "features"
 OUTPUTS_DIR = ROOT / "outputs"
 
@@ -287,7 +287,7 @@ def main() -> None:
     dataset_path = FEATURES_DIR / "dataset_e1.parquet"
     if not dataset_path.exists():
         raise FileNotFoundError(
-            "Missing dataset_e1.parquet. Run scripts/build_dataset_e1.py first."
+            "Missing dataset_e1.parquet. Run scripts/research/build_dataset_e1.py first."
         )
 
     logger.info("Loading dataset_e1 for E2 out-of-time evaluation")
@@ -398,7 +398,7 @@ def main() -> None:
             arm: df.to_dict(orient="records") for arm, df in rank_tables.items()
         },
         "reproduce": (
-            "PYTHONPATH=. python scripts/train_e2_out_of_time.py "
+            "PYTHONPATH=. python scripts/research/train_e2_out_of_time.py "
             "(requires data/features/dataset_e1.parquet from build_dataset_e1.py)"
         ),
     }

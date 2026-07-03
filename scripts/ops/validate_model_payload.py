@@ -31,7 +31,7 @@ paths"). This script validates the part of the contract that IS achievable
 today: payload structure and joblib.dump<->joblib.load loadability.
 
 dataset_h additionally needs data/features/dataset_h_lookup.json (a train-derived
-lookup artifact, gitignored/regenerable via scripts/build_dataset_h.py -- see
+lookup artifact, gitignored/regenerable via scripts/pipeline/build_dataset_h.py -- see
 src/features/dataset_h_pipeline.py) to run inference on unlabeled rows. That file
 is not part of the models/dataset_h_model.pkl payload itself, so this script also
 cross-checks it against the payload's data_fingerprint when checking
@@ -52,7 +52,7 @@ import pandas as pd
 from src.features.dataset_h_pipeline import load_dataset_h_lookup, validate_dataset_h_lookup_compatibility
 from src.training.modeling import build_model_payload, train_lightgbm_oof
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 DATASET_H_LOOKUP_PATH = ROOT / "data" / "features" / "dataset_h_lookup.json"
 
 REQUIRED_KEYS = {

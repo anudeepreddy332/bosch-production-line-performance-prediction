@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parent.parent.parent
 
 
 def run_step(name: str, cmd: list[str]) -> bool:
@@ -29,15 +29,15 @@ def run_step(name: str, cmd: list[str]) -> bool:
 
 if __name__ == "__main__":
     steps = [
-        ("Build Decision System", [sys.executable, "scripts/build_decision_summary.py"]),
+        ("Build Decision System", [sys.executable, "scripts/pipeline/build_decision_summary.py"]),
         # Track 3, label-free: scores data/features/test_dataset_h.parquet (must already
-        # exist -- build via scripts/build_test_dataset_h.py -- this pipeline does not
+        # exist -- build via scripts/pipeline/build_test_dataset_h.py -- this pipeline does not
         # regenerate it, same as it does not regenerate meta_dataset.parquet for the step
         # below). Replaces the old labeled Track 1 replay here; that script
-        # (scripts/run_offline_batch_eval.py) is still available standalone for offline
+        # (scripts/pipeline/run_offline_batch_eval.py) is still available standalone for offline
         # evaluation, it's just no longer part of the "production" stage.
-        ("Run Production Inference (Track 3, label-free)", [sys.executable, "scripts/run_production_inference.py"]),
-        ("Run Drift Monitoring", [sys.executable, "scripts/run_drift_monitoring.py"]),
+        ("Run Production Inference (Track 3, label-free)", [sys.executable, "scripts/pipeline/run_production_inference.py"]),
+        ("Run Drift Monitoring", [sys.executable, "scripts/pipeline/run_drift_monitoring.py"]),
     ]
 
     failed = []

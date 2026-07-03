@@ -1,12 +1,12 @@
 """Track 3: true label-free production batch inference for dataset_h.
 
 Consumes the unlabeled dataset_h feature contract built by
-`scripts/build_test_dataset_h.py` (`data/features/test_dataset_h.parquet` by default --
+`scripts/pipeline/build_test_dataset_h.py` (`data/features/test_dataset_h.parquet` by default --
 Id plus every column in `src.features.dataset_h_pipeline.DATASET_H_FEATURE_COLS`, no
 `Response` column at all, by construction) and scores it batch-by-batch against
 `models/dataset_h_model.pkl`, applying the shared `DecisionPolicy`/`apply_hybrid` policy
 from `src.inference.decision_engine` (the same label-free primitives Track 1's
-`scripts/run_offline_batch_eval.py` already reuses for its policy, just without any of
+`scripts/pipeline/run_offline_batch_eval.py` already reuses for its policy, just without any of
 that script's labeled-metric computation).
 
 This script NEVER reads or requires `Response` and NEVER computes a supervised metric
@@ -18,7 +18,7 @@ This script NEVER reads or requires `Response` and NEVER computes a supervised m
 
 There is no live stream in this repo, so each invocation treats the already-built,
 real, unlabeled Bosch test feature table as the "incoming batch source" and advances a
-small persisted pointer (mirroring `scripts/run_offline_batch_eval.py`'s existing
+small persisted pointer (mirroring `scripts/pipeline/run_offline_batch_eval.py`'s existing
 sliding-mode state pattern) -- one call processes one batch and wraps to a new cycle
 when it reaches the end of the dataset. Output is append-only and partitioned by
 cycle/batch (`outputs/production/dataset_h/cycle={n}/batch={n}/predictions.parquet`);
@@ -53,13 +53,13 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))  # so `from scripts...`/`from src...` resolve when run via
-# `python scripts/run_production_inference.py` without PYTHONPATH set externally --
-# matches scripts/run_offline_batch_eval.py and scripts/build_decision_summary.py, both
-# invoked the same way by scripts/run_full_system.py.
+# `python scripts/pipeline/run_production_inference.py` without PYTHONPATH set externally --
+# matches scripts/pipeline/run_offline_batch_eval.py and scripts/pipeline/build_decision_summary.py, both
+# invoked the same way by scripts/pipeline/run_full_system.py.
 
-from scripts.generate_submission import load_validated_payload, predict_proba_ensemble
+from src.inference.payload import load_validated_payload, predict_proba_ensemble
 from src.inference.decision_engine import apply_hybrid, load_policy
 from src.logger import setup_logger
 from src.utils.s3_utils import BUCKET_NAME, upload_file_append_only
@@ -116,7 +116,7 @@ def run_one_batch(
         raise ValueError(
             f"{features_path} unexpectedly has a Response column. This is a label-free "
             f"production inference path and must never read or score against labels -- "
-            f"refusing to proceed. Rebuild with scripts/build_test_dataset_h.py, which never "
+            f"refusing to proceed. Rebuild with scripts/pipeline/build_test_dataset_h.py, which never "
             f"emits Response by construction."
         )
 
@@ -279,7 +279,7 @@ def main() -> None:
 
     if not args.features_path.exists():
         raise FileNotFoundError(
-            f"{args.features_path} does not exist. Run scripts/build_test_dataset_h.py first "
+            f"{args.features_path} does not exist. Run scripts/pipeline/build_test_dataset_h.py first "
             f"to build the unlabeled dataset_h feature contract."
         )
 

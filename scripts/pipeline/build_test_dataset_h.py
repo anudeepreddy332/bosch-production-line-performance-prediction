@@ -7,16 +7,16 @@ contract models/dataset_h_model.pkl was trained on. This script is the one place
 Reads data/processed/test_numeric.parquet + test_date.parquet (no Response column -- this is
 unlabeled data and this script never reads or requires one), computes the same 8 baseline core
 columns (start_time, duration, feature_mean, records_last_1hr, records_last_24hr, density_ratio,
-chunk_id, chunk_size) and path_signature that scripts/build_dataset_baseline.py computes for
+chunk_id, chunk_size) and path_signature that scripts/pipeline/build_dataset_baseline.py computes for
 train data -- all self-contained, no train-derived statistics needed for these. Then applies the
-train-derived lookup artifacts persisted by scripts/build_dataset_h.py
+train-derived lookup artifacts persisted by scripts/pipeline/build_dataset_h.py
 (data/features/dataset_h_lookup.json: global_mean, station_rate, trans_rate, path_count_train,
 pair_count_train, all fit on labeled train data only) via
 src.features.dataset_h_pipeline.apply_dataset_h_lookup to compute the remaining 8 train-derived
 features. Output has Id plus every column in
 src.features.dataset_h_pipeline.DATASET_H_FEATURE_COLS.
 
-data/features/dataset_h_lookup.json is gitignored (regenerable via scripts/build_dataset_h.py,
+data/features/dataset_h_lookup.json is gitignored (regenerable via scripts/pipeline/build_dataset_h.py,
 not committed) and is NOT part of the models/dataset_h_model.pkl payload -- it is a second,
 separate artifact this script depends on. Before doing any feature-building work, this script
 cross-checks the lookup's embedded data_fingerprint against --model-path's (default
@@ -31,7 +31,7 @@ from pathlib import Path
 import joblib
 import pandas as pd
 
-from scripts.build_dataset_baseline import _build_date_core, _build_numeric_core
+from scripts.pipeline.build_dataset_baseline import _build_date_core, _build_numeric_core
 from src.features.core_pipeline import CorePipelineConfig, build_core_features
 from src.features.dataset_h_pipeline import (
     DATASET_H_FEATURE_COLS,
@@ -43,7 +43,7 @@ from src.logger import setup_logger
 
 logger = setup_logger(__name__)
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 PROCESSED_DIR = ROOT / "data" / "processed"
 FEATURES_DIR = ROOT / "data" / "features"
 MODELS_DIR = ROOT / "models"
@@ -79,7 +79,7 @@ def main() -> None:
     for required in (args.numeric_path, args.date_path):
         if not required.exists():
             raise FileNotFoundError(
-                f"Missing required input: {required}. Run scripts/prepare_data.py first."
+                f"Missing required input: {required}. Run scripts/pipeline/prepare_data.py first."
             )
 
     lookup = load_dataset_h_lookup(args.lookup_path)

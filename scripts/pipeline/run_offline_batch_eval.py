@@ -8,8 +8,8 @@ a threshold/inspection-budget sweep replayed batch-by-batch over labeled data --
 must never be presented as production/Track-3 behavior, because its input is labeled.
 
 For genuinely label-free Track 3 production batch inference, see
-`scripts/run_production_inference.py`, which consumes the unlabeled dataset_h feature
-contract (`scripts/build_test_dataset_h.py`) instead and never reads `Response`.
+`scripts/pipeline/run_production_inference.py`, which consumes the unlabeled dataset_h feature
+contract (`scripts/pipeline/build_test_dataset_h.py`) instead and never reads `Response`.
 """
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ import sys
 
 import pandas as pd
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
 from src.inference.decision_engine import DecisionPolicy, load_policy, simulate_batches
