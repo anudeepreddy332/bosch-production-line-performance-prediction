@@ -26,9 +26,9 @@ flowchart LR
 
 | Track | State | Governing log | Entry point |
 |---|---|---|---|
-| **Track 1** — Offline Training + Evaluation | Frozen (`track1-frozen`) | [`docs/research/decisions.md`](docs/research/decisions.md) (DR-001–DR-015) | `scripts/train_dataset_h.py`, `src/evaluation/decision_system.py` |
+| **Track 1** — Offline Training + Evaluation | Frozen (`track1-frozen`) | [`docs/research/decisions.md`](docs/research/decisions.md) (DR-001–DR-015) | `scripts/pipeline/train_dataset_h.py`, `src/evaluation/decision_system.py` |
 | **Track 2** — Kaggle Research | Frozen (`track2-frozen`, KDR-009) | [`docs/research/kaggle_decisions.md`](docs/research/kaggle_decisions.md) (KDR-001–KDR-009) | `results/leaderboard.json`, `src/kaggle/`, `scripts/kaggle/` |
-| **Track 3** — Production Inference | Frozen (`track3-frozen`) | [`docs/research/decisions.md`](docs/research/decisions.md) (DR-011–DR-015 for RP2) | `scripts/run_production_inference.py`, `scripts/run_drift_monitoring.py` |
+| **Track 3** — Production Inference | Frozen (`track3-frozen`) | [`docs/research/decisions.md`](docs/research/decisions.md) (DR-011–DR-015 for RP2) | `scripts/pipeline/run_production_inference.py`, `scripts/pipeline/run_drift_monitoring.py` |
 | **Portfolio Engineering** — this repo's own transition | Active (PF1) | [`docs/implementation/portfolio_master_plan.md`](docs/implementation/portfolio_master_plan.md) | the master plan itself |
 
 Why three ML tracks and not one "production" bucket: `docs/ml_system_tracks.md` (the canonical

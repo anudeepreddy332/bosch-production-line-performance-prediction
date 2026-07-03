@@ -52,12 +52,12 @@ than it should — a known, deliberately-deferred naming cleanup, not a correctn
 predictions/cycle={cycle_id}/batch={batch_id}/predictions.parquet
 ```
 
-written by `scripts/run_production_inference.py` — see
+written by `scripts/pipeline/run_production_inference.py` — see
 [`track3_production_inference.md`](track3_production_inference.md). If this prefix is empty (no
 batches scored yet), the page shows a clean warning, not a crash:
 
 > No production batches found yet under s3://.../predictions/cycle=\*/batch=\*/predictions.parquet.
-> Run scripts/run_production_inference.py to generate the first batch.
+> Run scripts/pipeline/run_production_inference.py to generate the first batch.
 
 ## How to refresh the cache
 
@@ -70,14 +70,14 @@ there.
 
 ## Current limitations
 
-- **No drift/data-quality rendering.** `scripts/run_drift_monitoring.py` already produces
+- **No drift/data-quality rendering.** `scripts/pipeline/run_drift_monitoring.py` already produces
   `outputs/monitoring/evidently_summary.json` + `.html`, but neither view renders it. A `grep` for
   `drift`/`evidently` in `apps/streamlit_dashboard/app.py` returns zero matches. Out of scope for
   the Docker/S3 hardening phase that fixed the items below — still open.
 - **Resolved: bucket/region duplication.** The dashboard previously hardcoded its own
   `AWS_BUCKET`/`AWS_REGION` constants and built a separate boto3 client on the default credential
   chain. It now imports `BUCKET_NAME`/`s3` directly from `src.utils.s3_utils` — one client, one
-  `.env`-driven source of truth, shared with `scripts/run_production_inference.py`. See
+  `.env`-driven source of truth, shared with `scripts/pipeline/run_production_inference.py`. See
   [`aws_s3.md`](aws_s3.md).
 - **`AWS_REGION` is now a required `.env` variable for the dashboard**, not optional. The old
   hardcoded `"ap-south-2"` fallback no longer exists — if `.env` doesn't set `AWS_REGION` (and
@@ -101,7 +101,7 @@ See [`troubleshooting.md`](troubleshooting.md) for the full table. Quick pointer
   in `.env`, or (if relying on an IAM role/default chain instead) confirm `.env` doesn't set those
   keys at all and that a region is resolvable some other way. See [`aws_s3.md`](aws_s3.md).
 - **Production Monitoring page shows the empty-state warning even though you ran batches** →
-  confirm you didn't use `--no-s3` when running `scripts/run_production_inference.py` (local-only
+  confirm you didn't use `--no-s3` when running `scripts/pipeline/run_production_inference.py` (local-only
   batches never reach S3, so View A can't see them); click "🔄 Refresh from S3" in case the
   60-second cache is stale.
 - **`ModuleNotFoundError: No module named 'boto3'`** → see [`local_setup.md`](local_setup.md) §1

@@ -17,15 +17,30 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from src.evaluation.decision_system import CostConfig, build_decision_table, summarize_operating_points
-from src.utils.s3_utils import BUCKET_NAME, s3
 from io import BytesIO
 
+# local (default): read data/features + outputs/production directly from disk, no AWS
+# credentials required. s3: read from the bucket named by AWS_BUCKET_NAME in .env -- see
+# docs/runbooks/aws_s3.md. src.utils.s3_utils (which creates a boto3 client at import time) is
+# only imported inside the two functions below that actually need it, so DATA_SOURCE=local never
+# touches boto3/dotenv and never requires AWS credentials to be present.
+DATA_SOURCE = os.getenv("DATA_SOURCE", "local").strip().lower()
+
 MONITORING_JSON = ROOT / "outputs" / "monitoring" / "evidently_summary.json"
+LOCAL_META_DATASET = ROOT / "data" / "features" / "meta_dataset.parquet"
+LOCAL_OOF_PREDICTIONS_FINAL = ROOT / "data" / "features" / "oof_predictions_final.parquet"
+LOCAL_PRODUCTION_GLOB = "outputs/production/*/cycle=*/batch=*/predictions.parquet"
 
 
 def load_parquet_from_s3(key: str):
+    from src.utils.s3_utils import s3, BUCKET_NAME  # lazy: only needed in DATA_SOURCE=s3 mode
+
     obj = s3.get_object(Bucket=BUCKET_NAME, Key=key)
     return pd.read_parquet(BytesIO(obj["Body"].read()))
+
+
+def _local_production_batch_paths() -> list[Path]:
+    return sorted(ROOT.glob(LOCAL_PRODUCTION_GLOB))
 
 
 @st.cache_data(ttl=60, show_spinner=False)
@@ -40,12 +55,14 @@ def load_monitoring_summary() -> dict | None:
 
 
 # Track 3 (label-free production batch inference): cycle/batch-partitioned output written
-# by scripts/run_production_inference.py, never containing a Response column by construction.
+# by scripts/pipeline/run_production_inference.py, never containing a Response column by construction.
 PRODUCTION_PREFIX = "predictions/"
 _PRODUCTION_KEY_RE = re.compile(r"^predictions/cycle=\d+/batch=\d+/predictions\.parquet$")
 
 
 def list_production_batch_keys() -> list[str]:
+    from src.utils.s3_utils import s3, BUCKET_NAME  # lazy: only needed in DATA_SOURCE=s3 mode
+
     keys: list[str] = []
     paginator = s3.get_paginator("list_objects_v2")
     for page in paginator.paginate(Bucket=BUCKET_NAME, Prefix=PRODUCTION_PREFIX):
@@ -57,11 +74,17 @@ def list_production_batch_keys() -> list[str]:
 
 @st.cache_data(ttl=60, show_spinner=False)
 def load_production_batches() -> pd.DataFrame:
-    keys = list_production_batch_keys()
-    if not keys:
-        return pd.DataFrame()
+    if DATA_SOURCE == "s3":
+        keys = list_production_batch_keys()
+        if not keys:
+            return pd.DataFrame()
+        frames = [load_parquet_from_s3(key) for key in keys]
+    else:
+        paths = _local_production_batch_paths()
+        if not paths:
+            return pd.DataFrame()
+        frames = [pd.read_parquet(p) for p in paths]
 
-    frames = [load_parquet_from_s3(key) for key in keys]
     df = pd.concat(frames, ignore_index=True)
 
     if "Response" in df.columns:
@@ -89,10 +112,22 @@ st.caption(
 @st.cache_data(show_spinner=False)
 def load_scoring_data() -> pd.DataFrame:
     try:
-        meta = load_parquet_from_s3("data/features/meta_dataset.parquet")
-        pred = load_parquet_from_s3("data/features/oof_predictions_final.parquet")
+        if DATA_SOURCE == "s3":
+            meta = load_parquet_from_s3("data/features/meta_dataset.parquet")
+            pred = load_parquet_from_s3("data/features/oof_predictions_final.parquet")
+        else:
+            if not (LOCAL_META_DATASET.exists() and LOCAL_OOF_PREDICTIONS_FINAL.exists()):
+                st.error(
+                    f"Local scoring data not found at {LOCAL_META_DATASET.relative_to(ROOT)} / "
+                    f"{LOCAL_OOF_PREDICTIONS_FINAL.relative_to(ROOT)}. Run the training pipeline "
+                    "first (see README Quickstart), or set DATA_SOURCE=s3 with AWS credentials in "
+                    ".env to read from S3 instead."
+                )
+                st.stop()
+            meta = pd.read_parquet(LOCAL_META_DATASET)
+            pred = pd.read_parquet(LOCAL_OOF_PREDICTIONS_FINAL)
     except Exception as e:
-        st.error(f"S3 Load Failed: {str(e)}")
+        st.error(f"Data load failed (DATA_SOURCE={DATA_SOURCE!r}): {str(e)}")
         st.stop()
 
     df = meta[["Id", "Response"]].merge(
@@ -599,10 +634,16 @@ elif nav == "Failure Analysis":
 
 elif nav == "Production Monitoring (Track 3)":
     st.subheader("Production Monitoring (Track 3)")
+    if DATA_SOURCE == "s3":
+        from src.utils.s3_utils import BUCKET_NAME  # lazy: only needed for this display string
+
+        _production_source = f"s3://{BUCKET_NAME}/{PRODUCTION_PREFIX}cycle=*/batch=*/predictions.parquet"
+    else:
+        _production_source = LOCAL_PRODUCTION_GLOB
     st.info(
         "Label-free view of real, unlabeled Track 3 batch inference output "
-        "(scripts/run_production_inference.py), read directly from "
-        f"s3://{BUCKET_NAME}/{PRODUCTION_PREFIX}cycle=*/batch=*/predictions.parquet. "
+        "(scripts/pipeline/run_production_inference.py), read directly from "
+        f"{_production_source}. "
         "This page never shows MCC, precision, recall, accuracy, or a confusion matrix -- "
         "production batches are unlabeled by construction."
     )
@@ -612,7 +653,7 @@ elif nav == "Production Monitoring (Track 3)":
     mon = load_monitoring_summary()
     if mon is None:
         st.warning(
-            "No monitoring output found. Run `scripts/run_drift_monitoring.py` to generate "
+            "No monitoring output found. Run `scripts/pipeline/run_drift_monitoring.py` to generate "
             f"`outputs/monitoring/evidently_summary.json`."
         )
     else:
@@ -662,7 +703,7 @@ elif nav == "Production Monitoring (Track 3)":
     st.markdown("---")
     # --- End Evidently Drift Monitoring ---
 
-    if st.button("🔄 Refresh from S3"):
+    if st.button(f"🔄 Refresh ({DATA_SOURCE})"):
         load_production_batches.clear()
         st.rerun()
 
@@ -670,9 +711,8 @@ elif nav == "Production Monitoring (Track 3)":
 
     if prod_df.empty:
         st.warning(
-            f"No production batches found yet under s3://{BUCKET_NAME}/{PRODUCTION_PREFIX}"
-            "cycle=*/batch=*/predictions.parquet. Run scripts/run_production_inference.py "
-            "to generate the first batch."
+            f"No production batches found yet under {_production_source}. Run "
+            "scripts/pipeline/run_production_inference.py to generate the first batch."
         )
     else:
         latest = prod_df.sort_values("run_seq").iloc[-1]

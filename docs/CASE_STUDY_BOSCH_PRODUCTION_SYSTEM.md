@@ -62,8 +62,8 @@ Production stack includes:
 - **Decision engine** (`src/inference/decision_engine.py`)
 - **FastAPI service** (`apps/api/main.py`)
 - **Streamlit dashboard** (`apps/streamlit_dashboard/app.py`)
-- **Offline batch eval, Track 1 labeled replay** (`scripts/run_offline_batch_eval.py`)
-- **Production batch inference, Track 3 label-free** (`scripts/run_production_inference.py`)
+- **Offline batch eval, Track 1 labeled replay** (`scripts/pipeline/run_offline_batch_eval.py`)
+- **Production batch inference, Track 3 label-free** (`scripts/pipeline/run_production_inference.py`)
 - **Evidently monitoring** (`src/monitoring/drift_detection.py`)
 
 The model outputs risk scores; the decision engine converts those into operational actions.
@@ -84,7 +84,7 @@ This lets operations tune between recall and workload.
 
 ### RP2 Honest Deployable Distribution (authoritative, reproducible)
 
-From `outputs/e3_rolling_origin_results.json` (E3, DR-011/DR-012/DR-015). These numbers are reproducible by running `scripts/train_e3_rolling_origin.py`.
+From `outputs/e3_rolling_origin_results.json` (E3, DR-011/DR-012/DR-015). These numbers are reproducible by running `scripts/research/train_e3_rolling_origin.py`.
 
 | Metric | Value |
 |---|---|
@@ -154,10 +154,10 @@ immediately above — artifacts deleted, not reproducible from current code):
 ## 8. Simulation Results
 
 **Track 1 / Offline Evaluation, not production inference.** These numbers come from
-`scripts/run_offline_batch_eval.py` (formerly `run_batch_simulation.py`) replaying
+`scripts/pipeline/run_offline_batch_eval.py` (formerly `run_batch_simulation.py`) replaying
 labeled OOF data batch-by-batch -- recall/precision are only ever valid against
 labeled data, never against the unlabeled stream Track 3 actually scores. See
-`docs/ml_system_tracks.md` for the three-track split and `scripts/run_production_inference.py`
+`docs/ml_system_tracks.md` for the three-track split and `scripts/pipeline/run_production_inference.py`
 for the genuinely label-free production batch inference path (no recall/precision
 anywhere in its output, by construction).
 
@@ -173,7 +173,7 @@ Interpretation: batch behavior is consistent with operating-point analysis.
 
 ## 9. Monitoring and Drift
 
-Track 3 label-free drift monitoring is live (`scripts/run_drift_monitoring.py`). The Evidently monitor reads exclusively from the production batch prediction parquets (`outputs/production/dataset_h/cycle=*/batch=*/predictions.parquet`) — no `Response` column is present or used. A temporal 70/30 split (earlier rows = reference baseline; later rows = current window) is applied before drift detection.
+Track 3 label-free drift monitoring is live (`scripts/pipeline/run_drift_monitoring.py`). The Evidently monitor reads exclusively from the production batch prediction parquets (`outputs/production/dataset_h/cycle=*/batch=*/predictions.parquet`) — no `Response` column is present or used. A temporal 70/30 split (earlier rows = reference baseline; later rows = current window) is applied before drift detection.
 
 **Scope — score-distribution drift only.** After structural columns are excluded (batch_id, cycle_id, run_seq, scored_at_utc, decision, auto_reject, manual_inspect) and Evidently's own ID-column filter removes `Id`, the monitor operates on a single column: `risk_score` (renamed to `pred` for Evidently's API). Both the "dataset drift" and "prediction drift" metrics in the summary are computed on this one column and reflect the same underlying KS test on the score distribution. They are not independent signals and do not cover input-feature drift. This is a deliberate design choice: monitoring input features requires the test feature table, which is not always available at monitoring time; score-distribution drift is a sufficient first-alert proxy and requires only the label-free prediction output.
 
@@ -185,7 +185,7 @@ From `outputs/monitoring/evidently_summary.json` (current run, 50,000 production
 - Drift share: **0.0**
 - Drift score (KS): **0.024** (threshold: 0.1) — not detected
 
-The Streamlit dashboard "Production Monitoring" view (`apps/streamlit_dashboard/app.py`) reads this file and displays drift status live. `scripts/validate_system.py` asserts the monitoring schema in its `production_inference` module.
+The Streamlit dashboard "Production Monitoring" view (`apps/streamlit_dashboard/app.py`) reads this file and displays drift status live. `scripts/pipeline/validate_system.py` asserts the monitoring schema in its `production_inference` module.
 
 **Interpreting alerts in the RP2 context**: given that honest MCC varies 0.06–0.18 across regimes, a drift alert indicates regime entry (prevalence or score-distribution shift). The expected operational response is threshold recalibration against recent data, not model replacement — the model's ranking (AUC ≈ 0.55) is stable across regimes.
 
@@ -216,15 +216,15 @@ Start point options:
 ## 12. Production Readiness Status
 
 ### Achieved — Offline / Decision Layer (Track 1)
-- Reproducible end-to-end runner (`scripts/run_full_system.py`)
+- Reproducible end-to-end runner (`scripts/pipeline/run_full_system.py`)
 - API + dashboard + Docker definitions
-- Offline batch simulation (labeled OOF replay, `scripts/run_offline_batch_eval.py`)
+- Offline batch simulation (labeled OOF replay, `scripts/pipeline/run_offline_batch_eval.py`)
 - RP2 research phase complete (DR-015): honest deployable performance distribution measured and documented
 
 ### Achieved — Production Layer (Track 3)
-- Label-free production batch inference (`scripts/run_production_inference.py`): 5 batches scored (50,000 rows), append-only partitioned output under `outputs/production/dataset_h/`
+- Label-free production batch inference (`scripts/pipeline/run_production_inference.py`): 5 batches scored (50,000 rows), append-only partitioned output under `outputs/production/dataset_h/`
 - Persistent cycle/batch state (`dataset_h_batch_state.json`): pointer, cycle_id, batch_id, run_seq
-- Evidently drift monitoring reading from production batches, no labels required (`scripts/run_drift_monitoring.py`)
+- Evidently drift monitoring reading from production batches, no labels required (`scripts/pipeline/run_drift_monitoring.py`)
 - `validate_system.py` extended with `validate_production_inference()`: asserts batch existence, required columns, `Response` absence, state file validity, and monitoring schema
 - Streamlit dashboard "Production Monitoring" view wired to `evidently_summary.json` and production batch stats
 

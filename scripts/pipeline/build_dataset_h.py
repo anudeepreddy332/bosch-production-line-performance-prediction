@@ -19,7 +19,7 @@ from src.training.cv import ChunkCVConfig, assign_fold_ids, make_chunk_aware_spl
 
 logger = setup_logger(__name__)
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 FEATURES_DIR = ROOT / "data" / "features"
 
 BASELINE_COLUMNS = [
@@ -50,7 +50,7 @@ def main() -> None:
     path_meta_path = FEATURES_DIR / "path_metadata.parquet"
 
     if not baseline_path.exists() or not path_meta_path.exists():
-        raise FileNotFoundError("Missing baseline artifacts. Run scripts/build_dataset_baseline.py first.")
+        raise FileNotFoundError("Missing baseline artifacts. Run scripts/pipeline/build_dataset_baseline.py first.")
 
     baseline_df = pd.read_parquet(baseline_path)
     meta_df = pd.read_parquet(path_meta_path)

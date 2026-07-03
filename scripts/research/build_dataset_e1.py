@@ -25,7 +25,7 @@ from src.logger import setup_logger
 
 logger = setup_logger(__name__)
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 PROCESSED_DIR = ROOT / "data" / "processed"
 FEATURES_DIR = ROOT / "data" / "features"
 

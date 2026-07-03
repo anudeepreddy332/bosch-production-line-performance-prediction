@@ -6,21 +6,17 @@ variables, and sanity checks. Everything below was verified against the current 
 
 ## 1. Python environment
 
-Two equivalent options:
-
 ```bash
-conda env create -f environment.yml
-conda activate bosch
-```
-
-```bash
+python -m venv .venv && source .venv/bin/activate   # or your preferred env manager
 pip install -r requirements.txt
 ```
 
-`boto3` is included in both `environment.yml` and `requirements.txt` (added during the Docker/S3
-hardening phase), so either install path above already gives you everything Track 3's upload,
-`src/utils/s3_utils.py`, and the dashboard's Production Monitoring page need for S3 access — no
-separate install step required.
+(`environment.yml` was removed in PF2 of the portfolio master plan — `requirements.txt` is now the
+single, pinned dependency source for both local setup and Docker.)
+
+`boto3` is included in `requirements.txt` (added during the Docker/S3 hardening phase), so the
+install above already gives you everything Track 3's upload, `src/utils/s3_utils.py`, and the
+dashboard's Production Monitoring page need for S3 access — no separate install step required.
 
 ## 2. Required local files/artifacts
 
@@ -30,8 +26,8 @@ work:
 | Path | Used by | Present in this repo? |
 |---|---|---|
 | `models/{baseline,dataset_g,dataset_h,meta_model}_model.pkl` | Track 1/2/3 inference | Yes — committed despite `models/*.pkl` being gitignored (intentionally force-added) |
-| `data/features/dataset_h_lookup.json` | Track 2/3 dataset_h feature building | Gitignored, regenerate via `scripts/build_dataset_h.py` if missing |
-| `data/features/test_dataset_h.parquet` | Track 2 (Kaggle) and Track 3 (production inference) input | Yes — regenerate via `scripts/build_test_dataset_h.py` if missing |
+| `data/features/dataset_h_lookup.json` | Track 2/3 dataset_h feature building | Gitignored, regenerate via `scripts/pipeline/build_dataset_h.py` if missing |
+| `data/features/test_dataset_h.parquet` | Track 2 (Kaggle) and Track 3 (production inference) input | Yes — regenerate via `scripts/pipeline/build_test_dataset_h.py` if missing |
 | `data/features/meta_dataset.parquet`, `oof_predictions_final.parquet` | Track 1 dashboard pages, drift monitoring | Yes |
 | `data/processed/sample_submission.parquet` | Track 2 row-count/Id sanity check | Yes (1,183,748 rows — full Kaggle scale, not the 50k dev sample) |
 | `outputs/max_recall_system_summary.json` | Default decision policy (`threshold_high`, `inspection_budget_pct`) for the API and Track 3 | **Does not exist in this repo.** Both `apps/api/main.py` and `src/inference/decision_engine.load_policy()` fall back to `DecisionPolicy(threshold_high=0.60, inspection_budget_pct=5.0)` when it's missing — this is expected, not an error. |
@@ -70,7 +66,7 @@ python -c "import pandas, numpy, pyarrow, sklearn, lightgbm, streamlit, plotly, 
 format the inference scripts expect, plus the `dataset_h` lookup-table/model fingerprint match):
 
 ```bash
-PYTHONPATH=. python scripts/validate_model_payload.py
+PYTHONPATH=. python scripts/ops/validate_model_payload.py
 ```
 
 Expected tail of output (verified on this branch):
@@ -88,11 +84,11 @@ Expected tail of output (verified on this branch):
 Exit code `0` means all payloads and the `dataset_h` lookup cross-check passed. Exit code `1`
 means at least one is broken — read the printed `FAIL`/`INVALID` lines for which one.
 
-**Production system output validation** (after running `scripts/run_full_system.py` at least
+**Production system output validation** (after running `scripts/pipeline/run_full_system.py` at least
 once — see [`track3_production_inference.md`](track3_production_inference.md)):
 
 ```bash
-python scripts/validate_system.py
+python scripts/pipeline/validate_system.py
 ```
 
 This sanity-checks `outputs/production_decision_summary.json`,
@@ -106,10 +102,10 @@ Once the above passes, each track has its own runbook with full detail. The fast
 
 ```bash
 # Track 1 (labeled, offline) -- should run and print threshold/budget output
-python scripts/build_decision_summary.py
+python scripts/pipeline/build_decision_summary.py
 
 # Track 3 (label-free, production) -- writes one local batch, skips S3
-python scripts/run_production_inference.py --no-s3
+python scripts/pipeline/run_production_inference.py --no-s3
 
 # Dashboard (both views)
 streamlit run apps/streamlit_dashboard/app.py

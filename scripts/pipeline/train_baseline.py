@@ -11,7 +11,7 @@ from src.training.summary import update_training_summary
 
 logger = setup_logger(__name__)
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 FEATURES_DIR = ROOT / "data" / "features"
 OUTPUTS_DIR = ROOT / "outputs"
 SUMMARY_PATH = OUTPUTS_DIR / "training_summary.json"
@@ -31,7 +31,7 @@ FEATURE_COLS = [
 def main() -> None:
     dataset_path = FEATURES_DIR / "dataset_baseline.parquet"
     if not dataset_path.exists():
-        raise FileNotFoundError("Missing dataset_baseline.parquet. Run scripts/build_dataset_baseline.py first.")
+        raise FileNotFoundError("Missing dataset_baseline.parquet. Run scripts/pipeline/build_dataset_baseline.py first.")
 
     df = pd.read_parquet(dataset_path)
 

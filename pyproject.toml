@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bosch-production-line-performance"
+version = "0.1.0"
+description = "Production-style ML decision system for Bosch Production Line failure detection, plus a governed Kaggle leaderboard research track."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+
+[tool.setuptools.packages.find]
+include = ["src*", "scripts*", "apps*"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+# Finalized in PF3 (docs/implementation/portfolio_master_plan.md) once the codebase is
+# brought to a clean baseline; this is the PF2 config stub.
+
+[tool.pytest.ini_options]
+markers = [
+    "slow: manually-run regression-anchor tests (not run in CI)",
+]
+# Test paths/settings finalized in PF3 alongside the tests/ suite itself.

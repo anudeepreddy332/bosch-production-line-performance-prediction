@@ -5,7 +5,7 @@ to the runbook with full detail.
 
 ## `FileNotFoundError: data/features/test_dataset_h.parquet does not exist`
 
-**Where:** `scripts/run_production_inference.py`, `scripts/generate_submission.py` (Track 2/3).
+**Where:** `scripts/pipeline/run_production_inference.py`, `scripts/generate_submission.py` (Track 2/3).
 
 **Cause:** the unlabeled `dataset_h` feature contract hasn't been built yet (it's gitignored if
 regenerated, though it's committed in this repo snapshot — if it's missing, something deleted or
@@ -13,7 +13,7 @@ never restored it).
 
 **Fix:**
 ```bash
-python scripts/build_test_dataset_h.py
+python scripts/pipeline/build_test_dataset_h.py
 ```
 This depends on `data/processed/test_numeric.parquet`/`test_date.parquet` and
 `data/features/dataset_h_lookup.json` already existing. See
@@ -31,18 +31,18 @@ missing, the checkout is incomplete, or you're on a branch/commit that predates 
 intentionally deleted them to retrain, re-run the matching `scripts/train_*.py` (see top-level
 `CLAUDE.md`). Verify with:
 ```bash
-PYTHONPATH=. python scripts/validate_model_payload.py
+PYTHONPATH=. python scripts/ops/validate_model_payload.py
 ```
 
 ## `ValueError: ... unexpectedly has a Response column` (Track 3 input)
 
-**Where:** `scripts/run_production_inference.py`'s defensive guard.
+**Where:** `scripts/pipeline/run_production_inference.py`'s defensive guard.
 
 **Cause:** `data/features/test_dataset_h.parquet` (or whatever `--features-path` points at) has a
 `Response` column — either it was built incorrectly, or you accidentally pointed Track 3 at a
 **labeled** parquet (e.g. `meta_dataset.parquet`) instead of the unlabeled test feature table.
 
-**Fix:** rebuild with `scripts/build_test_dataset_h.py`, which never emits `Response` by
+**Fix:** rebuild with `scripts/pipeline/build_test_dataset_h.py`, which never emits `Response` by
 construction, and double check `--features-path` if you overrode the default. This guard is
 intentional and correct behavior — do not work around it by stripping the column from a labeled
 file; that would defeat the purpose of the check. See
@@ -51,7 +51,7 @@ file; that would defeat the purpose of the check. See
 ## `FileExistsError: S3 key '...' already exists`
 
 **Where:** `src/utils/s3_utils.upload_file_append_only()`, called from
-`scripts/run_production_inference.py`.
+`scripts/pipeline/run_production_inference.py`.
 
 **Cause:** either (a) you're re-running with a state file that's behind where S3 actually is
 (someone else advanced S3 but not your local state), or (b) a prior run uploaded successfully but
@@ -97,7 +97,7 @@ these keys at all (even to empty/wrong values) — see [`aws_s3.md`](aws_s3.md).
 > No production batches found yet under s3://.../predictions/cycle=*/batch=*/predictions.parquet.
 
 **Cause, in order of likelihood:**
-1. You only ran `scripts/run_production_inference.py --no-s3` so far — local-only batches never
+1. You only ran `scripts/pipeline/run_production_inference.py --no-s3` so far — local-only batches never
    reach S3, and this page only reads S3.
 2. You ran it without `--no-s3` but `.env`'s credentials/bucket/region are wrong or missing (see
    the AWS-credentials entry above — the dashboard shares the same `s3_utils.py` client as the

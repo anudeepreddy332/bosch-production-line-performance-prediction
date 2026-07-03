@@ -19,11 +19,10 @@ import argparse
 import sys
 from pathlib import Path
 
-import joblib
 import numpy as np
 import pandas as pd
 
-from scripts.validate_model_payload import validate_payload
+from src.inference.payload import load_validated_payload, predict_proba_ensemble
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_SAMPLE_SUBMISSION = ROOT / "data" / "processed" / "sample_submission.parquet"
@@ -66,26 +65,6 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def load_validated_payload(model_path: Path) -> dict:
-    if not model_path.exists():
-        raise FileNotFoundError(f"Model payload not found: {model_path}")
-
-    payload = joblib.load(model_path)
-    if not isinstance(payload, dict):
-        raise ValueError(
-            f"{model_path} is a bare {type(payload).__name__}, not the Phase-2 payload dict "
-            "({'models', 'feature_cols', 'threshold', ...}) scripts/validate_model_payload.py "
-            "expects. This is the pre-Phase-2 model format -- re-run the matching "
-            "scripts/train_*.py to produce a valid payload before generating a submission. "
-            "Refusing to proceed."
-        )
-
-    problems = validate_payload(payload)
-    if problems:
-        raise ValueError(f"Invalid model payload at {model_path}: {problems}")
-    return payload
-
-
 def load_test_features(test_features_path: Path, feature_cols: list[str], id_col: str) -> pd.DataFrame:
     if not test_features_path.exists():
         raise FileNotFoundError(f"Test feature file not found: {test_features_path}")
@@ -110,16 +89,6 @@ def load_test_features(test_features_path: Path, feature_cols: list[str], id_col
         )
 
     return df
-
-
-def predict_proba_ensemble(payload: dict, features: pd.DataFrame) -> np.ndarray:
-    """Average predict_proba across CV folds, matching BoschPredictor's ensembling."""
-    feature_matrix = features[payload["feature_cols"]]
-    fold_preds = [
-        np.mean([model.predict_proba(feature_matrix)[:, 1] for model in fold_models], axis=0)
-        for fold_models in payload["models"]
-    ]
-    return np.mean(fold_preds, axis=0)
 
 
 def check_against_sample_submission(ids: pd.Series, sample_submission_path: Path) -> None:

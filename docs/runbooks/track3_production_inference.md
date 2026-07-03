@@ -6,7 +6,7 @@ Track 3 simulates a live, unlabeled production scoring stream: it treats the rea
 Bosch test feature table as an "incoming batch source," scores one batch per invocation against
 the approved `dataset_h` model, and emits only predictions/risk scores/decisions and batch
 statistics — never a label, never a supervised metric. This is implemented in
-`scripts/run_production_inference.py`. See [`docs/ml_system_tracks.md`](../ml_system_tracks.md)
+`scripts/pipeline/run_production_inference.py`. See [`docs/ml_system_tracks.md`](../ml_system_tracks.md)
 for why this is a separate track from Track 1 (labeled offline evaluation) and Track 2 (Kaggle
 submission).
 
@@ -87,7 +87,7 @@ what's there.
 ## `--no-s3` local smoke mode
 
 ```bash
-python scripts/run_production_inference.py --no-s3
+python scripts/pipeline/run_production_inference.py --no-s3
 ```
 
 Writes the local parquet, advances state, but skips the S3 upload entirely (prints
@@ -126,7 +126,7 @@ appended last. This means:
 **One batch** (default paths, S3-enabled):
 
 ```bash
-python scripts/run_production_inference.py
+python scripts/pipeline/run_production_inference.py
 ```
 
 Prints `cycle_id=`, `batch_id=`, `run_seq=`, `rows_scored=`, `flagged_count=`, `pred_mean=`,
@@ -138,7 +138,7 @@ system"). To advance multiple batches, invoke it multiple times — there is no 
 and adding one would contradict that constraint:
 
 ```bash
-for i in 1 2 3; do python scripts/run_production_inference.py; done
+for i in 1 2 3; do python scripts/pipeline/run_production_inference.py; done
 ```
 
 For a continuously-running simulation, schedule this command externally (cron, a systemd timer,
@@ -147,7 +147,7 @@ or similar) — see [`ec2_deployment.md`](ec2_deployment.md).
 **Custom batch size / paths** (useful for testing without touching the real state file):
 
 ```bash
-python scripts/run_production_inference.py \
+python scripts/pipeline/run_production_inference.py \
   --batch-size 500 \
   --state-path /tmp/state.json \
   --output-dir /tmp/out \

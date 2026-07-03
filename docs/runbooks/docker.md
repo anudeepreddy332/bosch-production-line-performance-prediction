@@ -27,7 +27,7 @@ curl http://localhost:8000/health
 # {"status":"ok"}
 ```
 
-## API container: `joblib` import fix
+## API container: `joblib` import fix (historical) and PF2 cleanup
 
 `bosch_api` previously crashed on startup with `ModuleNotFoundError: No module named 'joblib'`.
 Cause: `apps/api/main.py` does `from src.inference.decision_engine import ...`, and importing any
@@ -37,12 +37,19 @@ unconditionally did `from .predictor import BoschPredictor` and
 never installed in `Dockerfile.api` (the API doesn't use either class — it only needs
 `decision_engine`).
 
-Fixed by making those two re-exports lazy in `src/inference/__init__.py` (a module-level
-`__getattr__`, PEP 562) instead of adding `joblib` to `Dockerfile.api`. Nothing in the codebase
-imports `BoschPredictor`/`TwoStagePredictor` via the package root today (verified by grep), so
-this has no behavior change for any real call site, and it means the lightweight API image still
-needs no `joblib`/`FeaturePipeline` dependency at all. `from src.inference import BoschPredictor`
-still works for anyone who actually wants it — it just imports lazily now instead of eagerly.
+At the time, this was fixed by making those two re-exports lazy in `src/inference/__init__.py` (a
+module-level `__getattr__`, PEP 562) instead of adding `joblib` to `Dockerfile.api`.
+
+**As of PF2** (`docs/implementation/portfolio_master_plan.md`), `BoschPredictor` and
+`TwoStagePredictor` (`src/inference/predictor.py`, `src/inference/two_stage_predictor.py`) were
+deleted outright — they had zero real call sites anywhere in the codebase (verified by grep before
+removal) and depended on artifacts (`selected_features_top150.txt`, `train_selected.parquet`) that
+were never present in this repo. `src/features/pipeline.py` (`FeaturePipeline`, their only other
+consumer) was deleted with them for the same reason. The lazy-`__getattr__` workaround this section
+originally described is gone too — there is nothing left to lazily import, so
+`src/inference/__init__.py` is now a plain docstring-only package init. The lightweight API image's
+"no joblib/FeaturePipeline dependency" property still holds, now simply because the eager import
+path this fix worked around no longer exists.
 
 ## Dashboard container: what changed
 
@@ -104,7 +111,7 @@ the simpler single-string form (`env_file: .env`) — but then `.env` must exist
   if you want the instance role to be used.
 - **`Dockerfile.api` was intentionally left unchanged** — it has no S3 dependency, so it's out of
   scope for this phase.
-- Drift monitoring (`scripts/run_drift_monitoring.py`) is still not part of either dashboard view
+- Drift monitoring (`scripts/pipeline/run_drift_monitoring.py`) is still not part of either dashboard view
   and was out of scope for this phase too — see `docs/ml_system_tracks.md`.
 
 ## Validation performed

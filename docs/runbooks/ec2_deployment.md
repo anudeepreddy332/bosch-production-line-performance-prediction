@@ -17,7 +17,7 @@ and what's still unverified (a real EC2 instance, specifically).
   Bosch CSVs are several GB each, so provision disk accordingly (50+ GB) if you intend to
   regenerate `data/processed/*` from `data/raw/` rather than relying on already-committed
   artifacts.
-- Python 3.11 (matches `environment.yml`), git.
+- Python 3.11, git.
 
 ## Cloning the repo
 
@@ -67,15 +67,11 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-or via conda if you have it installed:
+(`environment.yml` was removed in PF2 of the portfolio master plan — `requirements.txt` is now the
+single, pinned dependency source for both local setup and Docker.)
 
-```bash
-conda env create -f environment.yml
-conda activate bosch
-```
-
-`boto3` is included in both `requirements.txt` and `environment.yml` as of the Docker/S3
-hardening phase — no separate install step needed.
+`boto3` is included in `requirements.txt` as of the Docker/S3 hardening phase — no separate
+install step needed.
 
 ## Running batch inference
 
@@ -83,7 +79,7 @@ One batch per invocation, exactly as documented in
 [`track3_production_inference.md`](track3_production_inference.md):
 
 ```bash
-python scripts/run_production_inference.py
+python scripts/pipeline/run_production_inference.py
 ```
 
 `tasks.md` is explicit that this should **not** loop indefinitely in-process ("simulate real-time
@@ -92,8 +88,8 @@ a new looping wrapper:
 
 - **systemd timer** (preferred for a long-lived instance): a `.timer` unit firing on whatever
   interval simulates your desired batch cadence, triggering a `.service` unit that runs
-  `python scripts/run_production_inference.py` once.
-- **cron**: `*/5 * * * * cd /path/to/repo && /path/to/.venv/bin/python scripts/run_production_inference.py >> /var/log/bosch_batch.log 2>&1`
+  `python scripts/pipeline/run_production_inference.py` once.
+- **cron**: `*/5 * * * * cd /path/to/repo && /path/to/.venv/bin/python scripts/pipeline/run_production_inference.py >> /var/log/bosch_batch.log 2>&1`
 - **tmux**, only for interactive/manual testing (run a few batches by hand, watch the output) —
   not a substitute for a real scheduler in a deployed environment.
 
@@ -145,8 +141,8 @@ written and tested against this specific bucket's actual usage on this branch.
 
 | Step | Status |
 |---|---|
-| Local Python env setup (`boto3` included in `requirements.txt`/`environment.yml`) | Verified (see [`local_setup.md`](local_setup.md)) |
-| `scripts/run_production_inference.py` batch scoring, append-only S3 upload | Verified locally (see [`track3_production_inference.md`](track3_production_inference.md)) |
+| Local Python env setup (`boto3` included in `requirements.txt`) | Verified (see [`local_setup.md`](local_setup.md)) |
+| `scripts/pipeline/run_production_inference.py` batch scoring, append-only S3 upload | Verified locally (see [`track3_production_inference.md`](track3_production_inference.md)) |
 | FastAPI `/health`/`/predict`/`/batch_predict` | Verified locally, not specifically on EC2 |
 | Streamlit dashboard, both views | Verified locally, not specifically on EC2 |
 | `docker compose build` + `docker compose up api` | Verified locally (see [`docker.md`](docker.md)) |

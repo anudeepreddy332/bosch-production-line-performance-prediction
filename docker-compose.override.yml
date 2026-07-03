@@ -1,0 +1,18 @@
+# Dev-only overrides, auto-merged by `docker compose up` whenever this file sits next to
+# docker-compose.yml (no -f flag needed). Restores the full-repo bind mount so local edits are
+# reflected without a rebuild -- this is the previous default `docker compose up` behavior,
+# unchanged from before PF2 (docs/implementation/portfolio_master_plan.md). Excluded from any
+# build/deploy path that uses `docker compose -f docker-compose.yml ...` explicitly (e.g. PF3's
+# CI docker-build check, or a future production deploy).
+services:
+  api:
+    volumes:
+      - ./:/app
+      - ./data:/app/data
+      - ./outputs:/app/outputs
+
+  dashboard:
+    volumes:
+      - ./:/app
+      - ./data:/app/data
+      - ./outputs:/app/outputs

@@ -1,7 +1,7 @@
 """Track 3 label-free drift monitoring.
 
 Reads all cycle/batch-partitioned prediction parquets produced by
-scripts/run_production_inference.py, strips structural counter columns, renames
+scripts/pipeline/run_production_inference.py, strips structural counter columns, renames
 risk_score -> pred (required by drift_detection.generate_evidently_report which has
 ValueDrift(column='pred') hardcoded), and runs Evidently drift detection on a
 temporal 70/30 split: earlier rows (sorted by run_seq) serve as the reference
@@ -19,7 +19,7 @@ import tempfile
 
 import pandas as pd
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
 from src.monitoring.drift_detection import generate_evidently_report
@@ -49,7 +49,7 @@ def load_production_batches(production_dir: Path) -> pd.DataFrame:
     if not batch_files:
         raise FileNotFoundError(
             f"No production batch parquets found under {production_dir}. "
-            "Run scripts/run_production_inference.py to generate at least one batch "
+            "Run scripts/pipeline/run_production_inference.py to generate at least one batch "
             "before running drift monitoring."
         )
     df = pd.concat([pd.read_parquet(p) for p in batch_files], ignore_index=True)
@@ -57,7 +57,7 @@ def load_production_batches(production_dir: Path) -> pd.DataFrame:
         raise ValueError(
             f"Production batch data at {production_dir} unexpectedly contains a "
             "'Response' column. Track 3 output must be label-free by construction — "
-            "check scripts/build_test_dataset_h.py and scripts/run_production_inference.py."
+            "check scripts/pipeline/build_test_dataset_h.py and scripts/pipeline/run_production_inference.py."
         )
     return df.sort_values("run_seq").reset_index(drop=True)
 

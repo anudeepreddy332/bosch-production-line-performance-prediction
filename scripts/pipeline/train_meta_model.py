@@ -12,7 +12,7 @@ from src.training.summary import read_training_summary, update_training_summary
 
 logger = setup_logger(__name__)
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 FEATURES_DIR = ROOT / "data" / "features"
 OUTPUTS_DIR = ROOT / "outputs"
 SUMMARY_PATH = OUTPUTS_DIR / "training_summary.json"

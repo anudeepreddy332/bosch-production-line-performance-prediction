@@ -136,21 +136,22 @@ boundary are in [`SYSTEM_OVERVIEW.md`](SYSTEM_OVERVIEW.md) and
 
 ```bash
 # Environment
-conda env create -f environment.yml      # or: pip install -r requirements.txt
+python -m venv .venv && source .venv/bin/activate   # or your preferred env manager
+pip install -r requirements.txt
 
 # Training pipeline (run in order; each step reads parquet outputs of the previous one)
-python scripts/prepare_data.py --zip-path ~/Downloads/bosch-production-line-performance.zip
-python scripts/build_dataset_baseline.py
-python scripts/build_dataset_g.py
-python scripts/build_dataset_h.py
-python scripts/train_baseline.py
-python scripts/train_dataset_g.py
-python scripts/train_dataset_h.py
-python scripts/train_meta_model.py
+python scripts/pipeline/prepare_data.py --zip-path ~/Downloads/bosch-production-line-performance.zip
+python scripts/pipeline/build_dataset_baseline.py
+python scripts/pipeline/build_dataset_g.py
+python scripts/pipeline/build_dataset_h.py
+python scripts/pipeline/train_baseline.py
+python scripts/pipeline/train_dataset_g.py
+python scripts/pipeline/train_dataset_h.py
+python scripts/pipeline/train_meta_model.py
 
 # Production / decision pipeline (operates on the OOF/meta predictions above, not raw CSVs)
-python scripts/run_full_system.py
-python scripts/validate_system.py
+python scripts/pipeline/run_full_system.py
+python scripts/pipeline/validate_system.py
 
 # Serving
 uvicorn apps.api.main:app --host 0.0.0.0 --port 8000
@@ -166,7 +167,7 @@ streamlit run apps/streamlit_dashboard/app.py
 Everything above runs from a single branch (`main`) — training and production pipelines were
 originally split across two branches during development; they were merged and now live together.
 There is no test suite yet (tracked in the [master plan](docs/implementation/portfolio_master_plan.md),
-PF3); `scripts/validate_system.py` is the closest thing to a correctness check today.
+PF3); `scripts/pipeline/validate_system.py` is the closest thing to a correctness check today.
 
 Runbooks with full command-level detail for local setup, each of the three tracks, the dashboard,
 Docker, S3, and EC2 deployment live in [`docs/runbooks/`](docs/runbooks/README.md).

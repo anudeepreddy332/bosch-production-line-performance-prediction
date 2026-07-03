@@ -3,7 +3,7 @@
 ## Required bucket / env vars
 
 `src/utils/s3_utils.py` is the **single, canonical S3 client** for this entire project —
-`scripts/run_production_inference.py`, `scripts/run_full_system.py`, and (as of this phase)
+`scripts/pipeline/run_production_inference.py`, `scripts/pipeline/run_full_system.py`, and (as of this phase)
 `apps/streamlit_dashboard/app.py` all `import` its `s3` client and `BUCKET_NAME` constant rather
 than building their own. It reads from `.env` via `python-dotenv`:
 
@@ -79,7 +79,7 @@ Via the AWS CLI:
 aws s3 ls s3://<bucket>/predictions/ --recursive
 ```
 
-Via boto3 (uses the same client/credentials as `scripts/run_production_inference.py`):
+Via boto3 (uses the same client/credentials as `scripts/pipeline/run_production_inference.py`):
 
 ```bash
 python -c "

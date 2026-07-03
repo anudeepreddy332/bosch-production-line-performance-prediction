@@ -13,13 +13,13 @@ from src.training.summary import update_training_summary
 
 logger = setup_logger(__name__)
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 FEATURES_DIR = ROOT / "data" / "features"
 OUTPUTS_DIR = ROOT / "outputs"
 SUMMARY_PATH = OUTPUTS_DIR / "training_summary.json"
 
 # Canonical column list lives in src/features/dataset_h_pipeline.py so the test-side
-# feature builder (scripts/build_test_dataset_h.py) can never drift from what this
+# feature builder (scripts/pipeline/build_test_dataset_h.py) can never drift from what this
 # script trains the model on.
 FEATURE_COLS = DATASET_H_FEATURE_COLS
 
@@ -27,7 +27,7 @@ FEATURE_COLS = DATASET_H_FEATURE_COLS
 def main() -> None:
     dataset_path = FEATURES_DIR / "dataset_h.parquet"
     if not dataset_path.exists():
-        raise FileNotFoundError("Missing dataset_h.parquet. Run scripts/build_dataset_h.py first.")
+        raise FileNotFoundError("Missing dataset_h.parquet. Run scripts/pipeline/build_dataset_h.py first.")
 
     df = pd.read_parquet(dataset_path)
     verify_persisted_fold_assignment(df)
