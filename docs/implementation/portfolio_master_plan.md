@@ -65,7 +65,7 @@ Scope is fixed by the audit plus exactly eight ratified amendments:
 | Phase | Name                                   | Status      | Checkpoint | Effort    |
 |-------|-----------------------------------------|-------------|------------|-----------|
 | PF0   | Research freeze & unification + registry | COMPLETE    | CP0 ✓ approved 2026-07-03 | 4–7 h |
-| PF1   | Headline documents                     | IN PROGRESS | CP1        | 8–12 h    |
+| PF1   | Headline documents                     | AWAITING REVIEW (CP1) | CP1 | 8–12 h |
 | PF2   | Code hygiene                           | NOT STARTED | CP2        | 11–15 h   |
 | PF3   | Tests + CI (M1 gate)                   | NOT STARTED | CP3        | 7–9 h     |
 | PF4   | Recruiter dashboard + hosting          | NOT STARTED | CP4        | 18–28 h   |
@@ -190,7 +190,7 @@ PF8 remains an elective backlog thereafter.
 
 ### PF1 — Headline documents
 
-**Status: IN PROGRESS**
+**Status: AWAITING REVIEW (CP1)**
 
 - **Objective:** the two most-read documents lead with the verified results story; one-page system
   map exists.
@@ -207,12 +207,25 @@ PF8 remains an elective backlog thereafter.
   `docs/assets/` (new), possibly `docs/architecture.md` (only if README embeds its Mermaid).
 - **Risks:** number drift (all numbers must trace to `leaderboard.json`); overcorrection in the
   reframe (honesty semantics must survive); tone (subjective — CP1 gate).
-- **Validation checklist:**
-  - [ ] Every metric in README/case study/SYSTEM_OVERVIEW traces to `leaderboard.json`
-  - [ ] README renders correctly on GitHub; all links resolve, incl. every SYSTEM_OVERVIEW link
-  - [ ] Disclaimer content preserved verbatim within one click; no World-B number stated as verified
+- **Validation checklist (all verified — see CP1 report):**
+  - [x] Every metric in README/case study/SYSTEM_OVERVIEW traces to `leaderboard.json`
+  - [x] README renders correctly on GitHub; all links resolve, incl. every SYSTEM_OVERVIEW link
+  - [x] Disclaimer content preserved verbatim within one click; no World-B number stated as verified
 - **Git workflow:** `portfolio/PF1-headline-docs` (`PF1 docs:`), `--no-ff`.
 - **Stopping point:** CP1 (voice + accuracy sign-off). **Effort: 8–12 h.**
+- **Execution record (2026-07-03):** README rewritten (results-first: honest RP2 production range
+  side-by-side with the frozen, clearly-labeled Kaggle ladder); `SYSTEM_OVERVIEW.md` added at repo
+  root; case study's top-of-document disclaimer relocated verbatim to a sidebar directly above the
+  §7 table it describes (all four key factual claims confirmed present via script), plus a new
+  §13 covering the Kaggle track. Every 5-decimal MCC value across all three documents (27 in
+  README, 2 in SYSTEM_OVERVIEW, 5 in the case study) was extracted by script and confirmed to
+  match a `leaderboard.json` value exactly — zero unexplained numbers. Both README architecture
+  diagrams are byte-identical copies of `docs/architecture.md`'s Mermaid blocks (diffed, not
+  redrawn); `docs/architecture.md` itself was not modified. Two existing charts
+  (`outputs/e4_ranking_metrics.png`, `outputs/e4_topk_lift.png`) were copied into `docs/assets/` and
+  embedded, not regenerated. Deviation: only 2 of the spec'd "3 interim visuals" were used — no
+  Evidently HTML screenshot was taken, since capturing one would itself be creating a new visual
+  asset (no browser tooling was invoked); see the CP1 report for the full rationale.
 
 ### PF2 — Code hygiene
 
