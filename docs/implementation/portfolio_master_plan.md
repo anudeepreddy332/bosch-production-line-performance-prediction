@@ -66,7 +66,7 @@ Scope is fixed by the audit plus exactly eight ratified amendments:
 |-------|-----------------------------------------|-------------|------------|-----------|
 | PF0   | Research freeze & unification + registry | COMPLETE    | CP0 ✓ approved 2026-07-03 | 4–7 h |
 | PF1   | Headline documents                     | COMPLETE    | CP1 ✓ approved 2026-07-03 | 8–12 h |
-| PF2   | Code hygiene                           | IN PROGRESS | CP2        | 11–15 h   |
+| PF2   | Code hygiene                           | AWAITING REVIEW (CP2) | CP2 | 11–15 h |
 | PF3   | Tests + CI (M1 gate)                   | NOT STARTED | CP3        | 7–9 h     |
 | PF4   | Recruiter dashboard + hosting          | NOT STARTED | CP4        | 18–28 h   |
 | PF5   | Documentation site                     | NOT STARTED | CP5        | 8–12 h    |
@@ -231,7 +231,7 @@ PF8 remains an elective backlog thereafter.
 
 ### PF2 — Code hygiene
 
-**Status: IN PROGRESS**
+**Status: AWAITING REVIEW (CP2)**
 
 - **Objective:** every file a reviewer opens works, builds, and belongs; one dependency source of
   truth; dashboard runs credential-free.
@@ -254,17 +254,70 @@ PF8 remains an elective backlog thereafter.
   `apps/streamlit_dashboard/app.py`, `src/utils/s3_utils.py`; `docs/runbooks/*.md`; `.gitignore`.
 - **Risks:** highest blast radius — import breakage; doc-command drift; Docker regressions;
   dashboard refactor breaking S3 mode; scope temptation to refactor beyond data-loading (resist).
-- **Validation checklist:**
-  - [ ] `python -m compileall src scripts apps` clean; import sweep passes
-  - [ ] Each pipeline script answers `--help` from its new path; `run_full_system.py` +
+- **Validation checklist (all verified — see CP2 report):**
+  - [x] `python -m compileall src scripts apps` clean; import sweep passes
+  - [x] Each pipeline script answers `--help` from its new path; `run_full_system.py` +
         `validate_system.py` smoke-run green on existing local artifacts
-  - [ ] Both images build; `docker compose up` healthchecks pass; build context < 100 MB
-  - [ ] Dashboard launches with zero AWS credentials (local mode); S3 mode still works with `.env`
-  - [ ] `grep -rn "scripts/" README.md docs/runbooks/` — no stale paths; zero edits to historical logs
-  - [ ] Firewall grep clean; `grep -rn "bosch-ml-production" --include="*.py"` empty
+  - [x] Both images build; `docker compose up` healthchecks pass; build context < 100 MB
+  - [x] Dashboard launches with zero AWS credentials (local mode); S3 mode still works with `.env`
+  - [x] `grep -rn "scripts/" README.md docs/runbooks/` — no stale paths; zero edits to historical logs
+  - [x] Firewall grep clean; `grep -rn "bosch-ml-production" --include="*.py"` empty
 - **Git workflow:** `portfolio/PF2-code-hygiene`; commit-1 = pure `git mv`; then extraction,
   packaging, Docker, dashboard (`PF2 chore:/refactor:/build:`), `--no-ff`.
 - **Stopping point:** CP2 (smoke evidence). **Effort: 11–15 h.**
+- **Execution record (2026-07-03):** Pure `git mv` commit (22 files, 0 insertions/deletions,
+  R100 renames only) landed before any content edit. `scripts/generate_submission.py` was carved
+  out of the regroup (stays top-level) since `scripts/kaggle/generate_submission_K2.py` imports it
+  by that exact module path and the kaggle tree must stay untouched -- documented as a necessary
+  deviation. All 22 moved scripts' `Path(__file__).resolve()` ROOT depth fixed
+  (`parents[1]`→`parents[2]`, `.parent.parent`→`.parent.parent.parent`); 25/26 modules import
+  cleanly under the project's real conda env (1 exclusion: `scripts.research.train_e4_ranking_stability`,
+  a pre-existing `matplotlib`-not-in-`requirements.txt` gap predating this phase, logged to the PF8
+  backlog). `src/inference/payload.py` extracted; `scripts/generate_submission.py` re-exports both
+  functions unchanged so the Kaggle import keeps working with zero edits to `scripts/kaggle/`.
+  `BoschPredictor`/`TwoStagePredictor`/`FeaturePipeline` deleted (verified zero real call sites
+  before removal); `src/inference/__init__.py` and `src/features/__init__.py` updated; stale
+  docstring/runtime-message references to the deleted classes rewritten in
+  `scripts/ops/validate_model_payload.py` and `src/training/modeling.py`. `pyproject.toml` +
+  `Makefile` added; `environment.yml` deleted. Dockerfiles hardened (requirements-first layers,
+  non-root `appuser`, HEALTHCHECK); `.dockerignore` extended (was already partially present,
+  missing `data/features`, `outputs/`, `models/` -- now excluded); dev bind mounts moved to
+  `docker-compose.override.yml` (auto-merged by plain `docker compose up`, so default local
+  behavior is unchanged). Streamlit `DATA_SOURCE=local|s3` toggle added, default `local`,
+  `src.utils.s3_utils` imported lazily only in the `s3` branch. `results/leaderboard.json` and the
+  three headline docs (README, SYSTEM_OVERVIEW, case study) had zero hardcoded bucket references
+  to begin with (pre-existing, not a PF2 fix). A ~35-file mechanical path sweep (scripted, not
+  hand-edited, to avoid missed spots) fixed every remaining bare `scripts/X.py` reference across
+  `src/`, `apps/`, `README.md`, `SYSTEM_OVERVIEW.md`, the case study, and all of `docs/runbooks/` --
+  re-verified the PF1 traceability/link-integrity checks afterward, all still pass. Zero diff to
+  `docs/research/decisions.md` / `kaggle_decisions.md` across the entire phase (verified via
+  `git diff main -- <both files> | wc -l` = 0). Full command-level validation evidence (Docker
+  build-context size, healthcheck output, credential-free container test, byte-identical smoke-run
+  output on `build_decision_summary.py`/`run_drift_monitoring.py`/`validate_system.py`) is in the
+  CP2 report delivered alongside this commit, not duplicated here.
+- **Deviation, safety-motivated:** `scripts/pipeline/run_full_system.py` (no `--help`/argparse by
+  design; unconditionally executes 3 subprocess steps ending in a real S3 upload) and
+  `run_production_inference.py` (advances persistent batch/cycle state and does a live,
+  though append-only, S3 write) were **not executed end-to-end for real** during validation --
+  doing so would mutate shared production state and touch live S3, which this phase's
+  code-hygiene validation does not need and should not risk unilaterally. Validated instead via
+  import sweep, `--help`/argparse correctness where applicable, and code review. Their two
+  S3-free siblings (`build_decision_summary.py`, `run_drift_monitoring.py`) plus `validate_system.py`
+  *were* run for real and produced byte-identical output to what's already committed. Flagged for
+  CP2 review.
+- **Incident, caught and corrected:** an accidental `--help` sweep over every `scripts/pipeline/*.py`
+  file hit `run_full_system.py` (no argparse guard) and let it execute for real for ~60s before a
+  command timeout killed it. Effect: one orphaned, never-finalized
+  `outputs/production/dataset_h/cycle=0/batch=5/predictions.parquet.tmp` (removed; the persistent
+  batch-state JSON was never advanced past batch 4, confirmed by its unchanged pre-session
+  timestamp) and a regenerated-but-content-different `outputs/monitoring/evidently_report.html`
+  (reverted to the committed version via `git checkout --`). No evidence of an S3 write reaching
+  that stage of the pipeline. `git status` confirmed clean after cleanup.
+- **Also unplanned, flagged for CP2:** while inspecting Docker Compose behavior, `docker compose
+  config` (run to verify the base+override merge) printed the real, resolved contents of the
+  user's local `.env` -- including live AWS credentials -- into this session's output. The user
+  was notified immediately in-session and advised to rotate the exposed key; no further command
+  that resolves `env_file` contents was run for the remainder of this phase.
 
 ### PF3 — Tests + CI (M1 gate)
 
