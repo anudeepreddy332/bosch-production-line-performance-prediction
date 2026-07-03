@@ -1,5 +1,9 @@
 # Bosch Production Line — Failure Detection & Decision System
 
+[![CI](https://github.com/anudeepreddy332/bosch-production-line-defect-analysis/actions/workflows/ci.yml/badge.svg)](https://github.com/anudeepreddy332/bosch-production-line-defect-analysis/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](pyproject.toml)
+
 A production-style ML decision system for detecting manufacturing failures in the Bosch Production
 Line Performance dataset (~0.58% failure rate, ~1.18M parts, ~2,000 anonymized sensor/route
 features). The system is built around a deliberate constraint: **optimize for what is actually
@@ -137,7 +141,7 @@ boundary are in [`SYSTEM_OVERVIEW.md`](SYSTEM_OVERVIEW.md) and
 ```bash
 # Environment
 python -m venv .venv && source .venv/bin/activate   # or your preferred env manager
-pip install -r requirements.txt
+make setup    # pip install -r requirements.txt
 
 # Training pipeline (run in order; each step reads parquet outputs of the previous one)
 python scripts/pipeline/prepare_data.py --zip-path ~/Downloads/bosch-production-line-performance.zip
@@ -153,9 +157,15 @@ python scripts/pipeline/train_meta_model.py
 python scripts/pipeline/run_full_system.py
 python scripts/pipeline/validate_system.py
 
+# Tests + lint
+make test     # pytest, ~2s, 73 tests
+make lint     # ruff check .
+
 # Serving
 uvicorn apps.api.main:app --host 0.0.0.0 --port 8000
 streamlit run apps/streamlit_dashboard/app.py
+# ...or both, in Docker:
+make docker-up   # docker compose up --build
 ```
 
 > `prepare_data.py` defaults to processing the full raw CSVs with no row cap. Pass
@@ -166,8 +176,11 @@ streamlit run apps/streamlit_dashboard/app.py
 
 Everything above runs from a single branch (`main`) — training and production pipelines were
 originally split across two branches during development; they were merged and now live together.
-There is no test suite yet (tracked in the [master plan](docs/implementation/portfolio_master_plan.md),
-PF3); `scripts/pipeline/validate_system.py` is the closest thing to a correctness check today.
+`tests/` (decision-engine, CV-leakage guards, synthetic feature fixtures, submission validator,
+API, and a value-locking check on `results/leaderboard.json`) runs in CI on every push and PR
+(lint → test → both Docker images build → leaderboard schema check —
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml)). `scripts/pipeline/validate_system.py`
+remains the closest thing to an end-to-end correctness check on real pipeline output.
 
 Runbooks with full command-level detail for local setup, each of the three tracks, the dashboard,
 Docker, S3, and EC2 deployment live in [`docs/runbooks/`](docs/runbooks/README.md).
