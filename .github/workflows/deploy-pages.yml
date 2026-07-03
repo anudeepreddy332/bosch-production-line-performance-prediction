@@ -1,0 +1,77 @@
+name: deploy-pages
+
+# Builds and deploys the recruiter dashboard (dashboard/) to Cloudflare Pages.
+# Runs only when dashboard/ changes -- the Python CI (ci.yml) is unaffected and
+# vice versa. The JSON data bundle under dashboard/public/data/ is committed by
+# scripts/ops/export_dashboard_data.py (run locally, not in CI -- CI has no
+# access to the gitignored parquets it reads), so this workflow only builds
+# and ships the already-committed bundle. See docs/implementation/
+# portfolio_master_plan.md PF4 for the full spec.
+#
+# Requires two repo secrets before this workflow can succeed (user-side setup,
+# not created by this workflow): CLOUDFLARE_API_TOKEN (Pages:Edit permission)
+# and CLOUDFLARE_ACCOUNT_ID. A Cloudflare Pages project named "bosch-dashboard"
+# must exist first (`wrangler pages project create bosch-dashboard`, or via the
+# Cloudflare dashboard). Until both secrets are set, this workflow will fail at
+# the deploy step -- build/typecheck/bundle-budget checks above it still run
+# and still gate the PR.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "dashboard/**"
+      - ".github/workflows/deploy-pages.yml"
+  pull_request:
+    paths:
+      - "dashboard/**"
+      - ".github/workflows/deploy-pages.yml"
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dashboard
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: dashboard/.nvmrc
+          cache: "npm"
+          cache-dependency-path: dashboard/package-lock.json
+
+      - name: Install dependencies (pinned, from committed lockfile)
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+      - name: Enforce bundle budget (<=1.5 MB gzipped, JS+CSS)
+        run: |
+          python3 - <<'EOF'
+          import gzip, pathlib, sys
+
+          dist = pathlib.Path("dist/assets")
+          total = 0
+          for f in dist.glob("*"):
+              if f.suffix in (".js", ".css"):
+                  total += len(gzip.compress(f.read_bytes(), 9))
+          budget = 1.5 * 1024 * 1024
+          print(f"Total gzipped JS+CSS: {total / 1024:.1f} KB (budget {budget / 1024:.0f} KB)")
+          if total > budget:
+              print("Bundle exceeds the 1.5 MB gzipped budget.", file=sys.stderr)
+              sys.exit(1)
+          EOF
+
+      - name: Deploy to Cloudflare Pages
+        if: ${{ github.event.pull_request.head.repo.full_name == github.repository || github.event_name == 'push' }}
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: dashboard
+          command: pages deploy dist --project-name=bosch-dashboard

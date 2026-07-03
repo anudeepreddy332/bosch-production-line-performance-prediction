@@ -6,6 +6,7 @@
   --color-text-muted: #5b6b81;
   --color-primary: #1e3a5f;
   --color-accent: #2f9e8f;
+  --color-accent-strong: #146a58; /* WCAG AA text contrast (>=4.5:1) for link/active-nav text -- --color-accent alone is ~3:1 */
   --color-warn: #b45309;
   --color-danger: #b3261e;
   --radius: 8px;
@@ -81,7 +82,7 @@ body {
 }
 
 .nav-link-active {
-  background: var(--color-accent);
+  background: var(--color-accent-strong);
   color: #fff;
 }
 
@@ -102,7 +103,7 @@ body {
 }
 
 .app-footer a {
-  color: var(--color-accent);
+  color: var(--color-accent-strong);
 }
 
 .page-loading {
@@ -286,9 +287,9 @@ ul.plain {
 }
 
 a.external-link {
-  color: var(--color-accent);
+  color: var(--color-accent-strong);
   text-decoration: none;
-  border-bottom: 1px dotted var(--color-accent);
+  border-bottom: 1px dotted var(--color-accent-strong);
 }
 
 a.external-link:hover {
