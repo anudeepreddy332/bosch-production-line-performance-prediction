@@ -475,8 +475,24 @@ PF8 remains an elective backlog thereafter.
   step — fixed by removing the pipe in favor of `set -euo pipefail` plus command substitution.
 - **PF8 backlog note carried forward:** `docs/reproducible_metrics_report.md` §1 remains stale (see
   §11 backlog entry logged during this phase) — not fixed here, out of PF4 scope.
-
-### PF5 — Documentation site
+- **Live preview validation (2026-07-03):** user created a dedicated Netlify account + site
+  (`bosch-production-dashboard`, not git-connected) and added `NETLIFY_AUTH_TOKEN`/
+  `NETLIFY_SITE_ID` as repo secrets. Re-ran the PR #4 CI job (`gh run rerun --failed`) — the preview
+  deploy step succeeded this time, producing a real draft URL
+  (`https://6a478945cb4a0218d5d16b11--bosch-production-dashboard.netlify.app`). Validated directly
+  against that live URL (not just the local build): all 4 routes return 200; all 7 JSON data files
+  return 200 and `models.json`/`governance.json.leaderboard` are byte-identical to the committed
+  bundle and to `results/leaderboard.json` respectively; Playwright smoke test (desktop + mobile
+  viewports) found 0 console/page/network errors (an initial run flagged several "errors" that were
+  actually normal HTTP 304 cache-revalidation responses — a false positive in the check's status
+  filter, corrected, then re-run clean); Lighthouse against the live URL: accessibility 100,
+  best-practices 100, performance 94 (desktop preset, consistent with the local build's 95) / 83
+  (default mobile-throttled preset, consistent with local's 82 — confirms this is Lighthouse's
+  simulated-network artifact, not a hosting-specific issue); SEO scored 63 on this preview URL only
+  because Netlify automatically sends `X-Robots-Tag: noindex` on non-production (draft) deploys —
+  expected, correct behavior for a PR preview, not a defect; re-check after the production deploy
+  (below). Root-level `.netlify/` (local CLI state, no secrets) added to `.gitignore` after
+  appearing during this testing.
 
 **Status: NOT STARTED**
 
