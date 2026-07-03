@@ -190,7 +190,7 @@ PF8 remains an elective backlog thereafter.
 
 ### PF1 — Headline documents
 
-**Status: NOT STARTED**
+**Status: IN PROGRESS**
 
 - **Objective:** the two most-read documents lead with the verified results story; one-page system
   map exists.
