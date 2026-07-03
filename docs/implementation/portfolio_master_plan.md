@@ -66,7 +66,7 @@ Scope is fixed by the audit plus exactly eight ratified amendments:
 |-------|-----------------------------------------|-------------|------------|-----------|
 | PF0   | Research freeze & unification + registry | COMPLETE    | CP0 ✓ approved 2026-07-03 | 4–7 h |
 | PF1   | Headline documents                     | COMPLETE    | CP1 ✓ approved 2026-07-03 | 8–12 h |
-| PF2   | Code hygiene                           | AWAITING REVIEW (CP2) | CP2 | 11–15 h |
+| PF2   | Code hygiene                           | COMPLETE    | CP2 ✓ approved 2026-07-03 | 11–15 h |
 | PF3   | Tests + CI (M1 gate)                   | NOT STARTED | CP3        | 7–9 h     |
 | PF4   | Recruiter dashboard + hosting          | NOT STARTED | CP4        | 18–28 h   |
 | PF5   | Documentation site                     | NOT STARTED | CP5        | 8–12 h    |
@@ -231,7 +231,7 @@ PF8 remains an elective backlog thereafter.
 
 ### PF2 — Code hygiene
 
-**Status: AWAITING REVIEW (CP2)**
+**Status: COMPLETE (CP2 approved 2026-07-03)**
 
 - **Objective:** every file a reviewer opens works, builds, and belongs; one dependency source of
   truth; dashboard runs credential-free.
@@ -318,6 +318,8 @@ PF8 remains an elective backlog thereafter.
   user's local `.env` -- including live AWS credentials -- into this session's output. The user
   was notified immediately in-session and advised to rotate the exposed key; no further command
   that resolves `env_file` contents was run for the remainder of this phase.
+- **CP2 outcome (2026-07-03): APPROVED.** Merge commit `1c71507` pushed to `origin/main`. No
+  corrections requested at CP2.
 
 ### PF3 — Tests + CI (M1 gate)
 
