@@ -55,6 +55,7 @@ not_in_nav: |
   research/kaggle_decisions.md
   ml_system_tracks.md
   implementation/portfolio_master_plan.md
+  design/dashboard_ux_blueprint_v2.md
 
 nav:
   - Home: index.md
