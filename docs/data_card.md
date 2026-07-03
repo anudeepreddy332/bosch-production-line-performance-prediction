@@ -72,6 +72,23 @@ If your local rerun of `train_dataset_h.py` produces a different fingerprint tha
 `a5bb652f2b20aca6`, the input data, feature set, or row/label counts differ from the recorded
 run — treat any metric comparison as invalid until the fingerprint matches.
 
+## Model artifact distribution
+
+As of `v1.0.0`, the four production model pickles (`models/{baseline,dataset_g,dataset_h,
+meta_model}_model.pkl`, ~93 MB total) are **no longer tracked in git** — `git rm --cached` removed
+them from `HEAD` without rewriting history (they remain retrievable from any commit or tag before
+this release, e.g. `git show track1-frozen:models/dataset_h_model.pkl`). They're distributed as
+GitHub Release attachments instead:
+
+```bash
+gh release download v1.0.0 --dir models --pattern '*.pkl'
+```
+
+Each downloaded pickle should reproduce the data fingerprint in the table above when re-scored;
+if it doesn't, re-download rather than trust a partial/corrupted file. Regenerating from scratch
+(`python scripts/pipeline/train_dataset_h.py`, etc. — see the root `README.md` quickstart)
+produces a fingerprint-identical model without needing the Release at all.
+
 ## Known data-provenance caveats
 
 - The committed `data/processed/PROVENANCE.json` (the one data file tracked in git) records the

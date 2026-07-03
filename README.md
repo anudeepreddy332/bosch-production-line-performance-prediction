@@ -186,6 +186,16 @@ make docker-up   # docker compose up --build
 > dev-sample vs. full-scale command sequences and which metrics each one reproduces, and
 > [`data/README.md`](data/README.md) for the provenance of the committed data artifacts.
 
+**Skip retraining:** as of `v1.0.0`, trained model pickles (`models/*.pkl`, ~93 MB) are no longer
+tracked in git (see `CHANGELOG.md`). Download them from the release instead of running the
+training pipeline above:
+
+```bash
+gh release download v1.0.0 --dir models --pattern '*.pkl'
+```
+
+See [`docs/data_card.md`](docs/data_card.md) for the fingerprint each pickle should reproduce.
+
 Everything above runs from a single branch (`main`) — training and production pipelines were
 originally split across two branches during development; they were merged and now live together.
 `tests/` (decision-engine, CV-leakage guards, synthetic feature fixtures, submission validator,

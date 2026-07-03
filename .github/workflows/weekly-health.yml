@@ -1,0 +1,49 @@
+name: weekly-health
+
+# PF6 (docs/implementation/portfolio_master_plan.md): scheduled health check for the two things
+# that can silently rot without any code change -- documentation links and the live public URLs.
+# Runs weekly and on manual dispatch (the PF6 validation checklist requires the manual-dispatch
+# path to pass before v1.0.0).
+on:
+  schedule:
+    - cron: "0 6 * * 1" # every Monday, 06:00 UTC
+  workflow_dispatch: {}
+
+jobs:
+  link-check:
+    name: Docs link check (mkdocs --strict)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install MkDocs
+        run: pip install -e ".[docs]"
+
+      - name: Build docs site (fails on any broken internal link)
+        run: mkdocs build --strict
+
+  public-url-probes:
+    name: Public URL probes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe public URLs
+        run: |
+          set -euo pipefail
+          urls=(
+            "https://bosch.themachinist.org/"
+            "https://bosch.themachinist.org/docs/"
+          )
+          fail=0
+          for url in "${urls[@]}"; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 "$url" || echo "000")
+            echo "$url -> $code"
+            if [ "$code" != "200" ]; then
+              echo "::error::$url returned $code, expected 200"
+              fail=1
+            fi
+          done
+          exit "$fail"

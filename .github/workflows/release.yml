@@ -1,0 +1,68 @@
+name: release
+
+# PF6 (docs/implementation/portfolio_master_plan.md): tag-triggered GitHub Release.
+#
+# Attaches the repo-tracked, reproducible artifacts (leaderboard registry, training summary,
+# Evidently drift report, model card) automatically -- these are all committed files, so any
+# checkout of the tagged commit has them. Model pickles (models/*.pkl) are NOT attached
+# automatically: PF6 untracked them from HEAD (see CHANGELOG.md "Removed"), so a CI checkout no
+# longer has them on disk. They must be uploaded manually from a machine that has them locally:
+#
+#   gh release upload <tag> models/baseline_model.pkl models/dataset_g_model.pkl \
+#       models/dataset_h_model.pkl models/meta_model.pkl
+#
+# Every release is created as a DRAFT, never auto-published. This lets the same workflow safely
+# rehearse a release (e.g. tag v1.0.0-rc1, inspect the draft, delete it) before the real tag --
+# publishing (making the release and its assets publicly visible) is a deliberate, separate,
+# manual step (gh release edit <tag> --draft=false), not something this workflow does on its own.
+#
+# No test-prediction CSVs are attached, ever -- see the frozen deliverable text in PF6.
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify required release artifacts exist
+        run: |
+          set -euo pipefail
+          for f in results/leaderboard.json outputs/training_summary.json \
+                   outputs/monitoring/evidently_report.html docs/model_card.md CHANGELOG.md; do
+            if [ ! -f "$f" ]; then
+              echo "::error::Missing required release artifact: $f"
+              exit 1
+            fi
+          done
+
+      - name: Create draft GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          gh release create "$TAG" \
+            --draft \
+            --title "$TAG" \
+            --notes "See [CHANGELOG.md](https://github.com/${GITHUB_REPOSITORY}/blob/main/CHANGELOG.md) for full release notes.
+
+          **Model pickles are not attached automatically** (untracked from \`HEAD\` as of PF6 -- see CHANGELOG.md). Attach them from a machine that has them locally, before publishing:
+
+              gh release upload $TAG models/baseline_model.pkl models/dataset_g_model.pkl models/dataset_h_model.pkl models/meta_model.pkl
+
+          Or, once published, download them:
+
+              gh release download $TAG --dir models --pattern '*.pkl'
+
+          This release is a **draft** -- publish it explicitly (\`gh release edit $TAG --draft=false\`) once the model pickles above are attached and the release notes have been reviewed." \
+            results/leaderboard.json \
+            outputs/training_summary.json \
+            outputs/monitoring/evidently_report.html \
+            docs/model_card.md

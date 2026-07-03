@@ -16,7 +16,9 @@ unlabeled test data:
    pairing matters because joblib.dump's container format for objects holding
    numpy arrays -- e.g. a fitted LightGBM model -- is not plain-pickle-readable;
    a payload must be written and read with the same library.)
-2. A best-effort, non-fatal check of whatever is currently in models/*.pkl.
+2. A best-effort, non-fatal check of whatever is currently in models/*.pkl on disk (as of
+   v1.0.0, these are downloaded from a GitHub Release rather than git-tracked -- see
+   docs/data_card.md -- so this check is skipped gracefully if none are present locally).
 
 This script validates the part of the contract that is exercised end-to-end by the
 committed pipeline: payload structure and joblib.dump<->joblib.load loadability. (A prior,
@@ -194,7 +196,7 @@ def main() -> int:
             f"training_rows={payload['training_rows']}, oof_mcc={payload['oof_mcc']:.4f})"
         )
 
-    print("\n=== Best-effort check of committed models/*.pkl (if present) ===")
+    print("\n=== Best-effort check of local models/*.pkl (if present) ===")
     models_dir = ROOT / "models"
     pkl_files = sorted(models_dir.glob("*.pkl")) if models_dir.exists() else []
     if not pkl_files:
