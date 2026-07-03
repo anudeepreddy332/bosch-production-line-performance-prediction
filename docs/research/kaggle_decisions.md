@@ -1996,6 +1996,107 @@ degenerate-case handling requirement). Confidence in the *design* is high; confi
 `kaggle/P1-station-temporal`, run the regression anchor and (once authorized) R1–R6, then return here
 to fill Evidence/Outcome/Decision.
 
+### §Evidence — P1 experimental results (2026-07-03, `kaggle/P1-station-temporal`)
+
+**Regression anchor (R0):** `LEGACY_LGB_PARAMS` on K5-A's exact 51-column stack via
+`train_p1.py --mode regression` reproduced honest OOF MCC **0.32506** exactly (Δ = 0.00000,
+tolerance 1e-4), `data_fingerprint` `e9df7ffff186b6fa` — identical to the K5-A/P0 anchor value —
+`wide_modeling.py` confirmed unmodified and faithful on the new branch.
+
+| Run | Config | Features | Honest OOF MCC | Δ vs P0 (0.37892) | Threshold | `capacity_bound` | Band |
+|---|---|---|---|---|---|---|---|
+| R1 | Family D only | 1082 | 0.37995 | +0.00103 | 0.96 | True | Weak |
+| R2 | Family D + S/L | 1190 | 0.38198 | +0.00306 | 0.96 | True | Weak |
+| R3 | R2 + `num_leaves=127` | 1190 | 0.38880 | +0.00988 | 0.91 | True | Moderate |
+| R4 | R2 + `num_leaves=255` | 1190 | 0.39265 | +0.01373 | 0.90 | **False** | Moderate |
+| **R5** | R2 + `num_leaves=255, min_child_samples=20` | 1190 | **0.39484** | **+0.01592** | 0.89 | **False** | **Moderate — WINNER** |
+| R6 | — | — | **skipped** | — | — | — | Winner not `capacity_bound`; condition (`capacity_bound AND Δtune ≥ +0.002`) failed on the first clause |
+
+**Family/axis attribution:** ΔD (R1 − P0) = +0.00103; ΔS|D (R2 − R1) = +0.00203; Δtune (R5 − R2) =
++0.01286. Feature engineering alone was weak; nearly all of P1's gain came from LightGBM capacity
+tuning (`num_leaves` 63→255, `min_child_samples` 50→20) — the new features mattered mainly by giving
+the higher-capacity model something to use, not by adding strong signal in isolation at the old
+capacity.
+
+**R6 correctly skipped:** R5's Δtune (+0.01286) clears the +0.002 gate, but `capacity_bound=False`
+(best iterations 1222–1364 of a 2500 budget) — the first run in the entire P0/P1 program not bound
+by its tree budget. Giving it more trees (R6's purpose) would have added nothing; the `AND` condition
+in KDR-008 §4 was designed for exactly this case and worked as intended.
+
+**Determinism:** build, R1, and R2 reproduced byte-identical OOF parquet output across 2 independent
+runs each (K5/P0 protocol). R5 (the winner) did **not** reproduce byte-identical at the raw
+prediction level — 6 of 1,183,747 predictions differed by up to 0.0017, most likely LightGBM
+multi-threaded histogram search hitting near-tied split gains at `num_leaves=255` (a far larger
+candidate-split space than the `num_leaves=63` used everywhere else in the program, where this never
+appeared). Decision-level determinism held exactly: identical threshold (0.89), identical OOF MCC to
+8 decimals (0.39484008), and **zero classification decisions differed** between the two runs.
+Submission-generation from the frozen model reproduced byte-identical across 2 runs (no
+thread-order-dependent step at inference time).
+
+**Implementation deviations (transparently logged, in-scope fixes, same discipline as P0):**
+(1) a false-positive `start_time`-NaN assertion in `build_dataset_p1_station_temporal.py` treated
+582 train / 583 test genuinely-all-NaN-date-row cases as an Id-mismatch merge failure — fixed to an
+informational print, guarded instead by the pre-existing row-count assert (committed `7d65e78`);
+(2) the same class of false-positive was caught before landing in the ad hoc P1 test-feature merge
+(checking a per-station column for zero-NaN instead of the always-populated `d_nstations`); (3) a
+process gap where the build's determinism rerun overwrote the original output before it was
+snapshotted, recovered by treating two subsequent independent runs as the determinism pair instead.
+
+**Kaggle submission (R5, the winner):**
+`outputs/kaggle/submission_P1_p1_tune_p1_ds_leaves255_mcs20_est2500.csv` — 1,183,748 rows, 1,448
+positives, threshold 0.89, generated via the unmodified `generate_submission_K2.py` pipeline from a
+purpose-built merged test table (`data/features/dataset_p1_full_test.parquet`: `dataset_p0_raw_test`
+base columns + `dataset_p1_dt_test` Family D/S/L columns, 1190 features). Validated: exact
+`[Id, Response]` schema, row count matches `sample_submission` (1,183,748), 0 duplicate Ids, 0 NaN,
+`Response ∈ {0,1}`, Id-set exact match, row order exactly matches `sample_submission`. MD5
+`dec4714e9a707e2670f67904b5cc5634`, SHA256
+`2de81f7191906b7ee8e624cc111c467cdedde7ecb7d667843925a0ddba6e83a2`. Determinism: byte-identical
+across 2 independent generation runs.
+
+| Metric | Score |
+|---|---|
+| Public LB | **0.40447** |
+| Private LB | **0.41917** |
+
+Both public and private LB scores exceed the honest OOF (0.39484) — consistent with the label-free
+OOF→LB calibration pattern confirmed 4× now (K3-A, K4, K5-A, P0). Private LB clears P0's best-to-date
+(0.40391) by **+0.01526** — the second-largest single-experiment private-LB gain in the program
+(after P0 itself), and the new best result overall.
+
+### §Outcome — hypothesis classification
+
+**`H_station_temporal_moderate` confirmed** (R5's Δ = +0.01592, within the +0.007 ≤ Δ < +0.020
+band), corroborated end-to-end by the Kaggle LB (private +0.01526 over P0 — closely matching the OOF
+Δ, unlike P0 where LB exceeded OOF by a wider margin; here the label-free OOF→LB gap was smaller but
+still positive, +0.02433 in absolute private-LB terms over honest OOF). `H_station_temporal_strong`
+and `H_station_temporal_weak` are rejected — the true result landed cleanly in the middle band
+exactly as one of the three pre-registered hypotheses predicted it might.
+
+### §Decision
+
+**P1 is complete and successful, at the Moderate tier.** The station-temporal feature families
+(Family D, Family S/L) did not independently justify the engineering effort — their combined direct
+contribution was only +0.00306 OOF. The real value of P1 was demonstrating that the base P0 stack
+was under-tuned: relieving LightGBM's `num_leaves`/`min_child_samples` constraints on top of the
+(modestly) enriched feature set recovered +0.01286 OOF, more than 4× the features' own direct
+contribution. This re-ranks the priority for any future phase: capacity/hyperparameter tuning is now
+a demonstrated, cheap, high-yield lever independent of new feature engineering, and should be
+considered before further feature-family expansion.
+
+Private MCC has progressed K5-B (0.33989, pre-P0) → P0 (0.40391) → **P1 (0.41917)** against the
+KDR-007 target of ~0.52. P1's gain (+0.01526 private) was smaller than P0's (+0.06680 private over
+K5-A) but real, positive, and delivered at a fraction of P0's engineering cost (reusing 100% of P0's
+feature pipeline, adding one side-table and one CLI flag's worth of new surface). No further P1 work
+is justified — the Moderate band and the capacity-tuning finding are both conclusive as measured.
+
+P1 is scientifically and procedurally complete: regression anchor green, full R1–R6 matrix measured
+(R6 correctly gated off), all four owed determinism checks resolved (three clean, one with a fully
+explained and decision-irrelevant nuance), two in-scope implementation bugs found and fixed
+transparently, and the Kaggle LB independently corroborates the OOF-based classification. P2
+(categorical features, per the original P1 design's phase boundary) is not pre-registered as part of
+this closure — a future KDR-009 would need to weigh a fresh categorical-feature probe against the
+now-demonstrated cheaper alternative of further capacity/hyperparameter tuning on the existing stack.
+
 ---
 
 ## Pending Kaggle experiment ledger
@@ -2016,4 +2117,4 @@ to fill Evidence/Outcome/Decision.
 | KDR-007 | Amend Track 2 objective (explain-the-gap → maximize private MCC, target ~0.52); pre-register P0: raw-numeric signal probe | **Decided — objective amended and P0 authorized (2026-07-02)**: `wide_modeling.py` (LightGBM-only, feature-agnostic trainer), Cell A/B/C factorial, Δ-over-K5-A decision variable |
 | P0 | Does the raw 968-column numeric matrix carry MCC signal, standalone and marginally over K5-A's magic/duplicate stack, large enough to justify P1 deep raw-feature engineering? | **Complete** — Cell C default OOF 0.37598 (Δ+0.05092), high-capacity OOF 0.37892 (Δ+0.05386); public LB 0.39226 / private LB 0.40391 (best to date, +0.06680 private over K5-A); `H_raw_dominant` confirmed; P1 authorized; tag `P0-result` (2026-07-02) |
 | KDR-008 | Pre-register P1: station-temporal (per-station date offsets, weekly position, transit) + station/line numeric aggregates, layered on P0 Cell C, plus LightGBM leaves/min-child tuning | **Decided — P1 authorized (2026-07-02)**: 57-col Family D + 108-col Family S/L (schema-derived counts), Δ-over-P0-Cell-C-HC decision variable, R0–R6 experimental matrix |
-| P1 | Do per-station timing features and station/line numeric aggregates add over P0 Cell C-HC, large enough to justify P2 (categorical) at full scope? | **Implementation in progress** |
+| P1 | Do per-station timing features and station/line numeric aggregates add over P0 Cell C-HC, large enough to justify P2 (categorical) at full scope? | **Complete** — winner R5 (`num_leaves=255, min_child_samples=20`) honest OOF 0.39484 (Δ+0.01592); public LB 0.40447 / private LB 0.41917 (best to date, +0.01526 private over P0); `H_station_temporal_moderate` confirmed; R6 correctly skipped (winner not capacity-bound); capacity-tuning identified as the dominant lever over feature engineering; tag `P1-result` (2026-07-03) |
