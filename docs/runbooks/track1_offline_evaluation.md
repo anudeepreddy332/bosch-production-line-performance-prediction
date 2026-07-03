@@ -29,20 +29,20 @@ the top-level `CLAUDE.md` and is out of scope for this runbook.
 
 ```bash
 # Decision summary: threshold sweep + inspection-budget sweep -> ranked operating points
-python scripts/build_decision_summary.py
+python scripts/pipeline/build_decision_summary.py
 
 # Labeled threshold/budget replay, batch-by-batch (the "offline batch eval" -- this is the
 # script that was formerly misnamed run_batch_simulation.py; it computes real
 # precision/recall/tp/fp/fn/tn because its input (meta_dataset.parquet) IS labeled)
-python scripts/run_offline_batch_eval.py --mode full
-python scripts/run_offline_batch_eval.py --mode sliding --batch-size 10000
+python scripts/pipeline/run_offline_batch_eval.py --mode full
+python scripts/pipeline/run_offline_batch_eval.py --mode sliding --batch-size 10000
 
 # Drift monitoring (Evidently) -- also Track-1-shaped today: reads meta_dataset.parquet
 # (labeled) plus a historical, non-reproducible full-scale blend file, not Track 3's S3 output
-python scripts/run_drift_monitoring.py
+python scripts/pipeline/run_drift_monitoring.py
 
 # Run all three in sequence + upload the two static JSON summaries to S3
-python scripts/run_full_system.py
+python scripts/pipeline/run_full_system.py
 ```
 
 The dashboard's labeled-data pages (everything except "Production Monitoring (Track 3)") are also
@@ -57,7 +57,7 @@ Track 1 — see [`dashboard.md`](dashboard.md) for how to run those.
 | `run_offline_batch_eval.py --mode sliding` | same file + `outputs/batch_simulation_state.json` (gitignored) | Same metrics, but resumable batch-by-batch like Track 3's state pattern |
 | `run_drift_monitoring.py` | `outputs/monitoring/evidently_summary.json` + `.html` | Evidently drift report between a stable 70/30 reference/current split |
 | `run_full_system.py` | all of the above + S3 upload of the two JSON summaries | End-to-end orchestration |
-| `python scripts/validate_system.py` | `outputs/system_validation_report.json` | Sanity-checks ranges/invariants across the three JSONs above and cross-checks consistency |
+| `python scripts/pipeline/validate_system.py` | `outputs/system_validation_report.json` | Sanity-checks ranges/invariants across the three JSONs above and cross-checks consistency |
 
 ## Warnings: World A vs. World B, reproducibility
 

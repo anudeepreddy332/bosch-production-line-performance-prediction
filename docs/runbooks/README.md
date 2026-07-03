@@ -74,7 +74,7 @@ and audit history: [`docs/ml_system_tracks.md`](../ml_system_tracks.md).
 - **Outstanding: AWS key rotation.** A real AWS access key was printed in plaintext by
   `docker compose config` during this work and has not yet been rotated. Treat it as compromised
   until rotated.
-- **Drift monitoring is still Track-1-shaped.** `scripts/run_drift_monitoring.py` reads
+- **Drift monitoring is still Track-1-shaped.** `scripts/pipeline/run_drift_monitoring.py` reads
   `data/features/meta_dataset.parquet` (labeled) and a historical, non-reproducible blend file
   (`oof_predictions_context_meta_v2_blend.parquet` — see `data/README.md`), not Track 3's
   unlabeled S3 output. It is not yet part of the label-free production path and is not rendered in

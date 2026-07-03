@@ -111,7 +111,7 @@ the simpler single-string form (`env_file: .env`) — but then `.env` must exist
   if you want the instance role to be used.
 - **`Dockerfile.api` was intentionally left unchanged** — it has no S3 dependency, so it's out of
   scope for this phase.
-- Drift monitoring (`scripts/run_drift_monitoring.py`) is still not part of either dashboard view
+- Drift monitoring (`scripts/pipeline/run_drift_monitoring.py`) is still not part of either dashboard view
   and was out of scope for this phase too — see `docs/ml_system_tracks.md`.
 
 ## Validation performed

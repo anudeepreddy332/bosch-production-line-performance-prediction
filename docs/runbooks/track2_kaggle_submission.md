@@ -18,11 +18,11 @@ duplicate that document**. Read it for the "why"; read this runbook for the curr
 script, and committed `models/*.pkl` being pre-Phase-2 bare estimators. As of this branch, **both
 gaps are resolved specifically for `dataset_h`**:
 
-- `scripts/build_test_dataset_h.py` exists and has already been run —
+- `scripts/pipeline/build_test_dataset_h.py` exists and has already been run —
   `data/features/test_dataset_h.parquet` is committed (1,183,748 rows, real Kaggle scale, no
   `Response` column).
 - `models/dataset_h_model.pkl` is a valid Phase-2 payload (verified via
-  `scripts/validate_model_payload.py` — see [`local_setup.md`](local_setup.md)).
+  `scripts/ops/validate_model_payload.py` — see [`local_setup.md`](local_setup.md)).
 
 **This was verified by actually running the command below**, not just by inspecting the code.
 
