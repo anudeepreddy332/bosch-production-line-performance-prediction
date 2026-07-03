@@ -1468,3 +1468,93 @@ a.external-link:hover {
     grid-template-columns: repeat(25, 1fr);
   }
 }
+
+/* ---------- StackVerdict (Model Internals v2) ---------- */
+
+.stack-verdict {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--color-accent-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--elev-1);
+  padding: 1.25rem 1.5rem;
+  margin: 1.25rem 0;
+}
+
+.stack-verdict-claim {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0 0 1rem;
+  max-width: none;
+}
+
+.stack-verdict-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.stack-verdict-row {
+  display: grid;
+  grid-template-columns: 11rem 1fr 5rem;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.stack-verdict-label {
+  font-size: 0.88rem;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.stack-verdict-track {
+  background: var(--color-bg);
+  border-radius: 999px;
+  height: 0.9rem;
+  overflow: hidden;
+}
+
+.stack-verdict-fill {
+  height: 100%;
+  background: var(--color-text-muted);
+  border-radius: 999px;
+  transition: width var(--motion-med) var(--ease-standard);
+}
+
+.stack-verdict-fill-win {
+  background: var(--color-accent-strong);
+}
+
+.stack-verdict-fill-loss {
+  background: var(--color-danger);
+  opacity: 0.6;
+}
+
+.stack-verdict-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  text-align: right;
+  color: var(--color-primary);
+}
+
+.family-swatch {
+  display: inline-block;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 3px;
+  margin-right: 0.45rem;
+}
+
+@media (max-width: 640px) {
+  .stack-verdict-row {
+    grid-template-columns: 1fr;
+    gap: 0.3rem;
+  }
+  .stack-verdict-value {
+    text-align: left;
+  }
+}

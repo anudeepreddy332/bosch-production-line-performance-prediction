@@ -2,6 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import Plot from "../lib/plotly";
 import { loadCalibration, loadImportances, loadModelsMeta } from "../lib/data";
 import { MODEL_KEYS, type Calibration, type ImportanceRow, type ModelKey, type ModelsMeta } from "../lib/types";
+import StackVerdict from "../components/internals/StackVerdict";
+import MetricReadout from "../components/explorer/MetricReadout";
+import Accordion from "../components/Accordion";
 
 const FAMILY_COLORS: Record<string, string> = {
   structural: "#1e3a5f",
@@ -45,12 +48,9 @@ export default function ModelInternals() {
   return (
     <section>
       <h1>Model Internals</h1>
-      <p className="lede">
-        Four LightGBM models: three base models with progressively richer feature sets, stacked
-        into a meta-model. I measured the stack honestly — and it lost to its own best base model,
-        so the simpler model is the deployment candidate. Everything below comes from the same
-        honest out-of-fold predictions as the Decision Explorer.
-      </p>
+      <p className="lede">Four LightGBM models, three base and one stacked — measured honestly.</p>
+
+      {modelsMeta && <StackVerdict modelsMeta={modelsMeta} />}
 
       <div className="controls-row">
         <div className="model-select" role="group" aria-label="Model selection">
@@ -67,18 +67,6 @@ export default function ModelInternals() {
         </div>
       </div>
 
-      {modelsMeta && (
-        <div className="callout">
-          <p>
-            <strong>Why Dataset H ships, not the stack:</strong> the meta-model scores{" "}
-            {modelsMeta.meta_model.oof_mcc.toFixed(4)} OOF MCC against{" "}
-            {modelsMeta.dataset_h.oof_mcc.toFixed(4)} for Dataset H alone. With only ~0.58% positive
-            rows, the stack has too few failures to learn a better combination than its best input.
-            I report that instead of hiding it — negative results are results.
-          </p>
-        </div>
-      )}
-
       {meta && (
         <div className="card-grid card-grid-tight">
           <div className="card stat">
@@ -93,26 +81,18 @@ export default function ModelInternals() {
             <span className="stat-value">{meta.rows.toLocaleString()}</span>
             <span className="stat-label">Training rows, 5-fold chunk-aware CV</span>
           </div>
-          <div className="card stat">
-            <span className="stat-value" style={{ fontSize: "0.95rem" }} title={meta.data_fingerprint ?? ""}>
-              {meta.data_fingerprint ?? "n/a"}
-            </span>
-            <span className="stat-label">
-              Data fingerprint — hash of rows + features + labels, so a rerun can prove it trained
-              on identical data
-            </span>
-          </div>
+          <MetricReadout
+            value={meta.data_fingerprint ? meta.data_fingerprint.slice(0, 10) + "…" : "n/a"}
+            label="Data fingerprint"
+            definition={`${meta.data_fingerprint ?? "n/a"} — a hash of rows + features + labels, so a rerun can prove it trained on identical data.`}
+          />
         </div>
       )}
 
       {imp && (
         <>
           <h2>Feature importances</h2>
-          <p className="chart-hint">
-            Colors group features into families. What I look for here: is any single feature
-            dominating (fragile), and is the model leaning on features that would survive a live
-            deployment (all of these would).
-          </p>
+          <p className="chart-hint">No single feature dominates — nothing fragile here.</p>
           <div className="chart-wrap">
             <Plot
               data={families.map((fam) => {
@@ -141,46 +121,35 @@ export default function ModelInternals() {
             />
           </div>
           {relevantFamilies.length > 0 && (
-            <details className="accordion">
-              <summary>
-                What the feature families mean
-                <span className="summary-hint">{relevantFamilies.length} families in this model</span>
-              </summary>
-              <div className="accordion-body">
-                <dl className="metric-def">
-                  {relevantFamilies.map((f) => (
-                    <div key={f.family}>
-                      <dt>
-                        <span
-                          aria-hidden="true"
-                          style={{
-                            display: "inline-block",
-                            width: "0.7rem",
-                            height: "0.7rem",
-                            borderRadius: "3px",
-                            background: FAMILY_COLORS[f.family] ?? "#8a94a3",
-                            marginRight: "0.45rem",
-                          }}
-                        />
-                        {f.family}
-                      </dt>
-                      <dd>{f.meaning}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </div>
-            </details>
+            <Accordion summary="What the feature families mean" hint={`${relevantFamilies.length} families in this model`}>
+              <dl className="metric-def">
+                {relevantFamilies.map((f) => (
+                  <div key={f.family}>
+                    <dt>
+                      <span
+                        aria-hidden="true"
+                        className="family-swatch"
+                        style={{ background: FAMILY_COLORS[f.family] ?? "#8a94a3" }}
+                      />
+                      {f.family}
+                    </dt>
+                    <dd>{f.meaning}</dd>
+                  </div>
+                ))}
+              </dl>
+            </Accordion>
           )}
         </>
       )}
 
       {meta && (
-        <>
-          <h2>Fold-level stability</h2>
+        <Accordion
+          summary="Fold-level stability"
+          hint="5 folds — spread is expected, not a red flag"
+        >
           <p className="chart-hint">
-            Five folds, five MCC values. The spread is real and expected: at a ~0.58% failure rate
-            each fold holds only ~1,400 positives, so per-fold MCC and thresholds are naturally
-            noisy. I report the spread rather than the best fold.
+            At a ~0.58% failure rate each fold holds only ~1,400 positives, so per-fold MCC is
+            naturally noisy. I report the spread rather than the best fold.
           </p>
           <div className="chart-wrap">
             <Plot
@@ -204,17 +173,15 @@ export default function ModelInternals() {
               style={{ width: "100%" }}
             />
           </div>
-        </>
+        </Accordion>
       )}
 
       {cal && (
         <>
           <h2>Calibration</h2>
           <p className="chart-hint">
-            Does a score of 0.8 actually mean an 80% failure chance? Each dot is a bin of parts:
-            mean predicted probability against the failure rate that really occurred. Dots near the
-            dashed line mean the scores are trustworthy as probabilities, not just as a ranking —
-            which matters because the decision layer prices mistakes in real cost units.
+            Dots near the dashed line mean a 0.8 score really means ~80% failure chance, not just a
+            good ranking — the cost model prices mistakes in real units, so this matters.
           </p>
           <div className="chart-wrap">
             <Plot
