@@ -11,13 +11,14 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.append(str(ROOT))
 
 
+from io import BytesIO
+
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
 from src.evaluation.decision_system import CostConfig, build_decision_table, summarize_operating_points
-from io import BytesIO
 
 # local (default): read data/features + outputs/production directly from disk, no AWS
 # credentials required. s3: read from the bucket named by AWS_BUCKET_NAME in .env -- see
@@ -33,7 +34,7 @@ LOCAL_PRODUCTION_GLOB = "outputs/production/*/cycle=*/batch=*/predictions.parque
 
 
 def load_parquet_from_s3(key: str):
-    from src.utils.s3_utils import s3, BUCKET_NAME  # lazy: only needed in DATA_SOURCE=s3 mode
+    from src.utils.s3_utils import BUCKET_NAME, s3  # lazy: only needed in DATA_SOURCE=s3 mode
 
     obj = s3.get_object(Bucket=BUCKET_NAME, Key=key)
     return pd.read_parquet(BytesIO(obj["Body"].read()))
@@ -61,7 +62,7 @@ _PRODUCTION_KEY_RE = re.compile(r"^predictions/cycle=\d+/batch=\d+/predictions\.
 
 
 def list_production_batch_keys() -> list[str]:
-    from src.utils.s3_utils import s3, BUCKET_NAME  # lazy: only needed in DATA_SOURCE=s3 mode
+    from src.utils.s3_utils import BUCKET_NAME, s3  # lazy: only needed in DATA_SOURCE=s3 mode
 
     keys: list[str] = []
     paginator = s3.get_paginator("list_objects_v2")
@@ -654,7 +655,7 @@ elif nav == "Production Monitoring (Track 3)":
     if mon is None:
         st.warning(
             "No monitoring output found. Run `scripts/pipeline/run_drift_monitoring.py` to generate "
-            f"`outputs/monitoring/evidently_summary.json`."
+            "`outputs/monitoring/evidently_summary.json`."
         )
     else:
         pred_drift = mon.get("summary", {}).get("prediction_drift", {})

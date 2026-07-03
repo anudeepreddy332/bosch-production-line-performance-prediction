@@ -59,8 +59,8 @@ sys.path.insert(0, str(ROOT))  # so `from scripts...`/`from src...` resolve when
 # matches scripts/pipeline/run_offline_batch_eval.py and scripts/pipeline/build_decision_summary.py, both
 # invoked the same way by scripts/pipeline/run_full_system.py.
 
-from src.inference.payload import load_validated_payload, predict_proba_ensemble
 from src.inference.decision_engine import apply_hybrid, load_policy
+from src.inference.payload import load_validated_payload, predict_proba_ensemble
 from src.logger import setup_logger
 from src.utils.s3_utils import BUCKET_NAME, upload_file_append_only
 

@@ -7,9 +7,9 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import psutil
 import pyarrow as pa
 import pyarrow.parquet as pq
-import psutil
 
 from src.features.core_pipeline import CorePipelineConfig, build_core_features
 from src.logger import setup_logger

@@ -17,9 +17,8 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import pyarrow as pa
-import pyarrow.parquet as pq
 import psutil
+import pyarrow.parquet as pq
 
 from src.logger import setup_logger
 

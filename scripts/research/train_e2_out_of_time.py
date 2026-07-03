@@ -27,7 +27,6 @@ import lightgbm as lgb
 import numpy as np
 import pandas as pd
 import psutil
-from sklearn.metrics import matthews_corrcoef
 
 from src.features.dataset_h_pipeline import DATASET_H_FEATURE_COLS
 from src.logger import setup_logger

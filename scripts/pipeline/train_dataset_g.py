@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pandas as pd
 import joblib
+import pandas as pd
 
 from src.logger import setup_logger
 from src.training.cv import verify_persisted_fold_assignment

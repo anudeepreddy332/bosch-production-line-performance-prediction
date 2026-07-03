@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import joblib
 import numpy as np
 import pandas as pd
-import joblib
 
 from src.logger import setup_logger
 from src.training.modeling import build_model_payload, train_lightgbm_oof
