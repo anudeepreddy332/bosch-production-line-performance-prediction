@@ -2099,6 +2099,153 @@ now-demonstrated cheaper alternative of further capacity/hyperparameter tuning o
 
 ---
 
+## KDR-009 — Freeze Track 2 (Kaggle); transition to portfolio engineering
+
+- **Date:** 2026-07-03
+- **Decision type:** Track closure. **Authorizes nothing further on Track 2** — this entry freezes
+  the track rather than pre-registering a new experiment. It does not amend, reopen, or contradict
+  any prior KDR; it declares the program complete against KDR-007's amended objective and records
+  why no further Kaggle experiment is being pursued at this time.
+
+### §1 — Trigger
+
+P1 closed 2026-07-03 (`P1-result`): `H_station_temporal_moderate` confirmed, best result in the
+program (public 0.40447 / private 0.41917). With the program-best result in hand and a full research
+postmortem completed (see §3 below), the user made a strategic decision: assume the Kaggle research
+objective has been substantially achieved, freeze Track 2, and redirect engineering effort toward
+transforming the repository into a public portfolio artifact (tracked separately — see §5). This KDR
+records that freeze decision and its evidentiary basis; it does not reopen KDR-001's objective.
+
+### §2 — Final results ladder
+
+Nine sealed, LB-scored experiments across the program (K1–K5, with K3 and K5 each contributing two
+variants, plus P0/P1). This table is a human-readable summary; the canonical machine-readable copy
+— which every downstream document, dashboard, and release artifact must trace to — is
+`results/leaderboard.json` (created alongside this entry, PF0 of `docs/implementation/portfolio_master_plan.md`).
+
+| Exp | KDR | Mechanism | OOF MCC | OOF status | Public LB | Private LB | Verdict |
+|---|---|---|---|---|---|---|---|
+| K1 | KDR-002 | Frozen `dataset_h` production baseline (no new features) | 0.15337 | honest | 0.14389 | 0.16160 | PASS (reproducibility) |
+| K2 | KDR-003 | Record-adjacency magic (position + train-neighbor Response) | 0.37530 | contaminated | 0.31699 | 0.32702 | `H_adjacency_dominant` CONFIRMED |
+| K3-A | KDR-004 | Position-only ablation of K2 | 0.31761 | honest | 0.31791 | 0.33161 | `H_position_dominant` CONFIRMED |
+| K3-B | KDR-004 | Label-only ablation of K2 | 0.21171 | contaminated | 0.10065 | 0.10530 | `H_label_contributes`/`H_position_optimistic` REJECTED |
+| K4 | KDR-005 | Label-free timing-cohort geometry on K3-A | 0.32192 | honest | 0.31697 | 0.33447 | `H_cohort_modest` CONFIRMED (low end) |
+| K5-A | KDR-006 | Raw-signature duplicate/identity keys, label-free, on K3-A | 0.32506 | honest | 0.32330 | 0.33711 | `H_duplicate_material` CONFIRMED |
+| K5-B | KDR-006 | Identity-conditioned label lookup on K3-A | 0.57828 | contaminated | 0.33571 | 0.33989 | `H_duplicate_material` CONFIRMED (via this clause) |
+| P0 | KDR-007 | Raw ~968-col numeric matrix + high-capacity LightGBM | 0.37892 | honest | 0.39226 | 0.40391 | `H_raw_dominant` CONFIRMED |
+| **P1** | KDR-008 | Station-temporal features + LightGBM capacity tuning | **0.39484** | honest | **0.40447** | **0.41917** | `H_station_temporal_moderate` CONFIRMED — **program best** |
+
+Private MCC progression: K1 0.16160 → K2 0.32702 → K3-A 0.33161 → K4 0.33447 → K5-A 0.33711 →
+K5-B 0.33989 → P0 0.40391 → **P1 0.41917**.
+
+### §3 — Research postmortem (condensed; full ladder/attribution reasoning in §2 and each KDR's own
+Evidence/Outcome/Decision sections above)
+
+- **Hypotheses confirmed:** `H_adjacency_dominant` (K2), `H_position_dominant` (K3), `H_cohort_modest`
+  (K4), `H_duplicate_material` (K5), `H_raw_dominant` (P0), `H_station_temporal_moderate` (P1) — six
+  for six pre-registered hypothesis classifications across the program, none inconclusive.
+- **Hypotheses falsified:** `H_label_contributes` and `H_position_optimistic` (K3) — neighbor-label
+  leakage conditioned on *adjacency* does not generalize and is actively harmful in isolation;
+  chunk-aware CV's label-free record-order OOF was *not* found to be under-blocked (a governance-
+  relevant negative result that repaired confidence in OOF-as-primary-metric for K4/K5/P0/P1).
+- **Roadmap-changing lessons:** (1) record-adjacency leakage explains 100% of K2's real LB gain via
+  record *proximity*, 0% via neighbor *label* lookup (K3) — this eliminated an entire planned
+  follow-up direction. (2) The label-free record-order/timing family saturated fast (K2→K3→K4 public
+  LB spread of 0.00094 across three materially different feature sets) — further work inside it was
+  correctly abandoned. (3) Identity-conditioned label lookup (K5-B) *does* generalize where
+  adjacency-conditioned lookup (K3-B) does not — a real, distinct mechanism, not a contradiction.
+  (4) The raw ~968-column numeric matrix (P0) was, by an order of magnitude, the single largest
+  lever found in the entire program — larger than every K1–K5 leakage-family experiment combined.
+  (5) P1 proved that LightGBM capacity/hyperparameter tuning (not further feature engineering) was
+  the dominant lever on top of P0: new features contributed +0.00306 OOF directly, while relieving
+  `num_leaves`/`min_child_samples` on top of them recovered +0.01286 — more than 4x the features'
+  own contribution.
+- **Wrong assumptions carried in from before P0:** Track 2 initially treated the honest
+  feature/model space as near-exhausted (an imported Production-track prior, RP1/RP2) and expected
+  further leaderboard gains to come exclusively from leakage families. P0 falsified the *strength*
+  of that assumption within the Kaggle-legal-but-non-deployable space: raw sensor columns, at
+  sufficient width and model capacity, carried far more signal than any leakage family the program
+  tested — the honest-space pessimism was calibrated on a 16–52-column feature set, not on the full
+  968-column raw matrix.
+- **Updated remaining-contribution estimates (from the pre-freeze postmortem):** further categorical
+  feature engineering — modest, likely below P1's own feature-family contribution (+0.00306);
+  additional numeric engineering beyond Family D/S/L — modest and likely capacity-tuning-dependent
+  per P1's own finding; further LightGBM tuning (seeds, additional leaf/regularization sweeps) —
+  the single highest-confidence remaining lever, directly demonstrated by P1's Δtune of +0.01286;
+  XGBoost/CatBoost diversity — unproven in this program, moderate cost, uncertain payoff;
+  stacking/blending — previously *hurt* honest performance in the frozen Production track (RP1/RP2:
+  meta_model 0.1494 < dataset_h 0.1534); a multi-seed blend of the existing P1 winner is a cheap
+  variant worth separating from full model-stacking, which remains unproven here.
+- **Revised realistic target:** the KDR-007 §0 objective's ~0.52 private-MCC target is not
+  defended by the evidence gathered since. A realistic revised range is **~0.435–0.445 private MCC
+  as the expected outcome of a further, bounded tuning/blending pass** (0.45 would be a good result,
+  0.46–0.47 a stretch) — not 0.52. This range is recorded here as the program's closing estimate; it
+  is not a new pre-registration and does not authorize further work on its own.
+- **Whether P2 (categorical features) proceeds as originally planned:** **No.** The postmortem's
+  own remaining-contribution ranking places further LightGBM capacity/hyperparameter tuning and a
+  multi-seed blend of the P1 winner above a fresh categorical-feature program on MCC-per-engineering-
+  hour — the P1 finding (features contributed +0.00306, tuning contributed +0.01286) is a direct,
+  in-program repudiation of "categorical features next" as the highest-value move. If Track 2 is
+  ever reopened, the natural next KDR is a "harvest-and-ensemble" probe (extended tuning + 5-seed
+  blend of the frozen P1 R5 dataset, plus an attribution rerun) — not the originally planned
+  categorical-feature track. This is recorded as a lead for a possible future KDR-010, not an
+  authorization.
+
+### §4 — Freeze declaration
+
+**Track 2 (Kaggle) is FROZEN as of this entry.** No `K<N>`, `P<N>`, or further Kaggle experiment is
+authorized. The program is judged complete against KDR-007's amended objective (maximize private
+leaderboard MCC via any Kaggle-legal mechanism, quantify what it costs to reach): nine sealed
+experiments, six-for-six hypothesis classifications, a fully attributed leakage-family decomposition
+(K1–K5), and a raw-signal + capacity-tuning program (P0–P1) that took private MCC from 0.16160 to
+0.41917 — the best result and the program's closing state.
+
+- **Tag:** `track2-frozen` (annotated), placed on the merge commit that lands this entry and the
+  companion portfolio-transition artifacts onto `main` (per
+  `docs/implementation/portfolio_master_plan.md`, PF0).
+- **Branch disposition:** `kaggle-main` is fast-forward-merged into `main` before this entry is
+  committed (so `main` carries the complete K1–P1 program) and is deleted afterward, once merge
+  ancestry and tag reachability are verified. `kaggle/*` experiment branches were already deleted at
+  their respective merges (K1–P1 precedent); none remain.
+- **Firewall status at freeze:** `src/kaggle/` and `scripts/kaggle/` remain quarantined and
+  unchanged by the freeze itself — the code is retained as-is (not deleted), since it is itself part
+  of the portfolio's evidence of governance discipline. The code valve
+  (`grep -rn --include="*.py" "import.*kaggle" src/ scripts/` excluding both quarantine trees) must
+  remain empty in perpetuity; this is a standing rule of the portfolio-transition ledger, not a new
+  one introduced here.
+
+### §5 — Unfreeze criteria
+
+Track 2 may be reopened only if **all** of the following hold:
+
+1. A specific, concretely-scoped experiment is proposed with an explicit MCC-per-engineering-hour
+   estimate that beats the postmortem's own ranking (§3) — i.e., it must argue why it outranks
+   further capacity tuning / multi-seed blending of the existing P1 winner, not merely that it might
+   help.
+2. The experiment is pre-registered as a new `KDR-0NN` (or a `KDR-010` "harvest-and-ensemble" probe
+   per §3's stated candidate) following the exact governance discipline used throughout K1–P1
+   (hypothesis fixed before results, contamination safeguards specified, git strategy fixed).
+3. The user explicitly authorizes reopening the track — a Kaggle score alone, however good, is never
+   sufficient justification on its own (per this log's standing rule that a leaderboard number is a
+   lead, never evidence, for anything outside this file).
+
+Absent all three, Track 2 stays frozen and no further commits land in `src/kaggle/`/`scripts/kaggle/`
+or this log beyond the portfolio-transition bookkeeping already authorized in
+`docs/implementation/portfolio_master_plan.md`.
+
+### §6 — Decision
+
+**Complete.** Track 2 is closed at `P1-result` (private MCC 0.41917), tag `track2-frozen` placed per
+§4. `results/leaderboard.json` is the canonical machine-readable record of the program going forward;
+`docs/ml_system_tracks.md` is updated to reflect Track 2 as Frozen/100% in the same change. Repository
+engineering effort moves to the portfolio-transition track governed by
+`docs/implementation/portfolio_master_plan.md` (PF0–PF8), which is out of scope for this file by
+design (per this log's own header: "no metric or conclusion from this log may appear in
+`decisions.md`", and symmetrically, portfolio-engineering work is not a Kaggle experiment and is not
+recorded here beyond this closure entry).
+
+---
+
 ## Pending Kaggle experiment ledger
 
 | ID | Pre-registered question | Status |
@@ -2118,3 +2265,4 @@ now-demonstrated cheaper alternative of further capacity/hyperparameter tuning o
 | P0 | Does the raw 968-column numeric matrix carry MCC signal, standalone and marginally over K5-A's magic/duplicate stack, large enough to justify P1 deep raw-feature engineering? | **Complete** — Cell C default OOF 0.37598 (Δ+0.05092), high-capacity OOF 0.37892 (Δ+0.05386); public LB 0.39226 / private LB 0.40391 (best to date, +0.06680 private over K5-A); `H_raw_dominant` confirmed; P1 authorized; tag `P0-result` (2026-07-02) |
 | KDR-008 | Pre-register P1: station-temporal (per-station date offsets, weekly position, transit) + station/line numeric aggregates, layered on P0 Cell C, plus LightGBM leaves/min-child tuning | **Decided — P1 authorized (2026-07-02)**: 57-col Family D + 108-col Family S/L (schema-derived counts), Δ-over-P0-Cell-C-HC decision variable, R0–R6 experimental matrix |
 | P1 | Do per-station timing features and station/line numeric aggregates add over P0 Cell C-HC, large enough to justify P2 (categorical) at full scope? | **Complete** — winner R5 (`num_leaves=255, min_child_samples=20`) honest OOF 0.39484 (Δ+0.01592); public LB 0.40447 / private LB 0.41917 (best to date, +0.01526 private over P0); `H_station_temporal_moderate` confirmed; R6 correctly skipped (winner not capacity-bound); capacity-tuning identified as the dominant lever over feature engineering; tag `P1-result` (2026-07-03) |
+| KDR-009 | Freeze Track 2 (Kaggle) at the P1 result; transition engineering effort to a public portfolio, per the ratified staff-level audit and execution ledger | **Decided — Track 2 frozen (2026-07-03)**: nine sealed experiments (K1–K5 incl. both K3/K5 variants, P0, P1), six-for-six hypothesis classifications, private MCC 0.16160→0.41917; revised realistic target ~0.435–0.445 (not the original ~0.52); P2 (categorical) deprioritized below capacity-tuning/blending per the postmortem; unfreeze requires a new pre-registered KDR + explicit user authorization (§5); tag `track2-frozen`; canonical ladder in `results/leaderboard.json`; portfolio work now governed by `docs/implementation/portfolio_master_plan.md` |
