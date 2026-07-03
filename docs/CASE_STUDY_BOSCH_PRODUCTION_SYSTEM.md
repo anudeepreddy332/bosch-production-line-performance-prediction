@@ -7,7 +7,7 @@
 > full provenance note before citing any number from that subsection specifically.
 
 ## Executive Summary
-We converted a competition-style ML workflow into a production decision system for failure prevention on a highly imbalanced manufacturing problem (about **0.58% failures**). Instead of optimizing only MCC, we optimized business outcomes: failures caught, inspection load, and cost.
+I converted a competition-style ML workflow into a production decision system for failure prevention on a highly imbalanced manufacturing problem (about **0.58% failures**). Instead of optimizing only MCC, I optimized business outcomes: failures caught, inspection load, and cost.
 
 RP2 (research complete, DR-015) establishes the **honest deployable operating distribution** via 5-fold rolling-origin forward-chaining (`outputs/e3_rolling_origin_results.json`):
 - Deployable MCC across operating windows: **0.06–0.18** (mean ≈ 0.12, 95% CI [0.05, 0.19])
@@ -32,22 +32,22 @@ From project outputs:
 - Failures are rare (roughly **0.5% to 0.6%**)
 - Severe class imbalance means naive accuracy is misleading
 
-Implication: We need explicit trade-off control, not a single static model threshold.
+Implication: the system needs explicit trade-off control, not a single static model threshold.
 
 ---
 
 ## 3. Why MCC Was Useful but Not Sufficient
 MCC is a strong modeling metric for imbalance and was used in Kaggle evaluation. However, in production, leaders ask:
-- How many failures do we catch?
-- How many parts do we inspect?
+- How many failures does it catch?
+- How many parts does it inspect?
 - What is the total quality-control cost?
 
 These are not answered by MCC alone.
 
 ---
 
-## 4. Why We Did Not Chase 0.52 MCC
-Some offline gains in this problem class can come from brittle patterns that do not generalize in live operations (especially leakage-adjacent temporal/group artifacts). We intentionally prioritized:
+## 4. Why I Did Not Chase 0.52 MCC
+Some offline gains in this problem class can come from brittle patterns that do not generalize in live operations (especially leakage-adjacent temporal/group artifacts). I intentionally prioritized:
 - leakage-safe decisioning,
 - stable policy behavior,
 - explainable trade-offs.
@@ -71,7 +71,7 @@ The model outputs risk scores; the decision engine converts those into operation
 ---
 
 ## 6. Decision Framework
-We support three operational modes:
+The decision layer supports three operational modes:
 1. **Threshold mode**: flag score >= threshold
 2. **Inspection budget mode**: top-K by risk under capacity
 3. **Hybrid mode**: auto-reject high risk + inspect next top-K

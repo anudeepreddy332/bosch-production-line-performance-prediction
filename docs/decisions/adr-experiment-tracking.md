@@ -37,7 +37,7 @@ validated against the prose log, not a database or tracking-server export.
 - **The log doubles as the documentation.** `decisions.md` and `kaggle_decisions.md` are readable
   narrative — a hiring manager or collaborator can read them start to finish and understand the
   full scientific story. An MLflow run table is a much harder artifact to read cover to cover; it
-  answers "what were the metrics" well and "why did we do this, and what did we conclude" poorly.
+  answers "what were the metrics" well and "why did I do this, and what did I conclude" poorly.
 - **Scale fits.** 14 sealed experiments over roughly a week of work is comfortably within what a
   disciplined human-maintained log can carry without becoming unnavigable. This decision would be
   revisited at meaningfully larger experiment counts or multiple concurrent contributors — neither
