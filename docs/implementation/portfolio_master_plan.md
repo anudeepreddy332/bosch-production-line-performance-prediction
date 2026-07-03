@@ -684,7 +684,7 @@ PF8 remains an elective backlog thereafter.
 
 ### PF8 — Polish + backlog (OPTIONAL, elective, post-M2)
 
-**Status: IN PROGRESS (dashboard presentation pass)**
+**Status: AWAITING REVIEW (CP8 — dashboard presentation pass)**
 
 - **Fixed items:** Decision-Explorer GIF; tag-timeline graphic; `CITATION.cff`;
   `.pre-commit-config.yaml` (ruff + whitespace); blog post on themachinist.org. Each independent,
@@ -698,6 +698,27 @@ PF8 remains an elective backlog thereafter.
   and a repo-wide first-person ("I", not "we") language sweep across living docs. Hard
   constraints set by the user: no metric/data/JSON-format changes, no engineering or governance
   changes, no evidence removal; historical logs stay append-only. Not merged until CP8 approval.
+- **Execution record (2026-07-03, dashboard presentation pass):** critique-first per the user's
+  brief (recruiter / EM / senior-SWE read of the live site, screenshots taken before any code
+  change). Implemented: global design system (typography scale, hero contrast block, insight
+  cards, consequence lists, native `<details>` accordions, K1→P1 timeline, flow strip, CTA grid,
+  value-change flash disabled under `prefers-reduced-motion`); Story rewritten recruiter-first
+  (hero answers "what is this" without scrolling; honest-range vs leaderboard-ceiling contrast as
+  the hero moment; research ladder as a timeline from `governance.json`); Decision Explorer made
+  educational (plain-English outcome cards, live consequence sentences, raise/lower comparison,
+  metric glossary accordion, defaults to the production candidate `dataset_h` at its tuned
+  threshold, data-driven delta vs the tuned point); Model Internals adds the
+  why-dataset_h-ships callout and family meanings; Governance keeps every row/link/note verbatim
+  but moves them into accordions behind summary stat cards and a verify-in-60-seconds callout.
+  First-person sweep across living docs (case study, ADR, one code comment) — append-only logs
+  (`decisions.md` 35, `kaggle_decisions.md` 9) and the frozen
+  `evaluation_feature_quality_audit.md` (3) deliberately untouched. One factual correction found
+  during the rewrite: old Story copy said the default cost ratio was "100x"; `CostConfig` is
+  100 vs 5 = 20x — fixed. Validation: `tsc` clean; build clean; gzip bundle ~453 KB (budget
+  1.5 MB); `mkdocs build --strict` clean; Playwright desktop+mobile — 0 console/page/network
+  errors, slider/accordion interactions verified, key values (0.41917 / 0.16160 / 0.06–0.18 /
+  1,183,747 / stacking 0.149-vs-0.153) confirmed rendering from data. JSON bundle and export
+  script untouched (`git diff` empty on `dashboard/public/data/` and `scripts/`).
 
 ## 10. Frozen technical decisions
 
