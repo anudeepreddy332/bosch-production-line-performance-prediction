@@ -65,8 +65,8 @@ Scope is fixed by the audit plus exactly eight ratified amendments:
 | Phase | Name                                   | Status      | Checkpoint | Effort    |
 |-------|-----------------------------------------|-------------|------------|-----------|
 | PF0   | Research freeze & unification + registry | COMPLETE    | CP0 ✓ approved 2026-07-03 | 4–7 h |
-| PF1   | Headline documents                     | AWAITING REVIEW (CP1) | CP1 | 8–12 h |
-| PF2   | Code hygiene                           | NOT STARTED | CP2        | 11–15 h   |
+| PF1   | Headline documents                     | COMPLETE    | CP1 ✓ approved 2026-07-03 | 8–12 h |
+| PF2   | Code hygiene                           | IN PROGRESS | CP2        | 11–15 h   |
 | PF3   | Tests + CI (M1 gate)                   | NOT STARTED | CP3        | 7–9 h     |
 | PF4   | Recruiter dashboard + hosting          | NOT STARTED | CP4        | 18–28 h   |
 | PF5   | Documentation site                     | NOT STARTED | CP5        | 8–12 h    |
@@ -190,7 +190,7 @@ PF8 remains an elective backlog thereafter.
 
 ### PF1 — Headline documents
 
-**Status: AWAITING REVIEW (CP1)**
+**Status: COMPLETE (CP1 approved 2026-07-03)**
 
 - **Objective:** the two most-read documents lead with the verified results story; one-page system
   map exists.
@@ -226,6 +226,8 @@ PF8 remains an elective backlog thereafter.
   embedded, not regenerated. Deviation: only 2 of the spec'd "3 interim visuals" were used — no
   Evidently HTML screenshot was taken, since capturing one would itself be creating a new visual
   asset (no browser tooling was invoked); see the CP1 report for the full rationale.
+- **CP1 outcome (2026-07-03): APPROVED.** Merge commit `5823568` pushed to `origin/main`. No
+  corrections requested at CP1.
 
 ### PF2 — Code hygiene
 
