@@ -1,0 +1,268 @@
+{
+  "baseline": [
+    {
+      "feature": "feature_mean",
+      "importance": 9022.0,
+      "importance_pct": 20.788,
+      "family": "structural"
+    },
+    {
+      "feature": "duration",
+      "importance": 7514.6,
+      "importance_pct": 17.315,
+      "family": "structural"
+    },
+    {
+      "feature": "records_last_1hr",
+      "importance": 7476.4,
+      "importance_pct": 17.227,
+      "family": "rolling-window"
+    },
+    {
+      "feature": "density_ratio",
+      "importance": 7258.0,
+      "importance_pct": 16.724,
+      "family": "rolling-window"
+    },
+    {
+      "feature": "records_last_24hr",
+      "importance": 6395.2,
+      "importance_pct": 14.735,
+      "family": "rolling-window"
+    },
+    {
+      "feature": "start_time",
+      "importance": 4360.2,
+      "importance_pct": 10.047,
+      "family": "structural"
+    },
+    {
+      "feature": "chunk_id",
+      "importance": 1369.4,
+      "importance_pct": 3.155,
+      "family": "structural"
+    },
+    {
+      "feature": "chunk_size",
+      "importance": 4.2,
+      "importance_pct": 0.01,
+      "family": "structural"
+    }
+  ],
+  "dataset_g": [
+    {
+      "feature": "records_last_1hr",
+      "importance": 5265.4,
+      "importance_pct": 12.132,
+      "family": "rolling-window"
+    },
+    {
+      "feature": "feature_mean",
+      "importance": 5090.0,
+      "importance_pct": 11.728,
+      "family": "structural"
+    },
+    {
+      "feature": "density_ratio",
+      "importance": 5034.2,
+      "importance_pct": 11.6,
+      "family": "rolling-window"
+    },
+    {
+      "feature": "signature_failure_rate",
+      "importance": 4737.0,
+      "importance_pct": 10.915,
+      "family": "path/target-rate"
+    },
+    {
+      "feature": "records_last_24hr",
+      "importance": 4714.6,
+      "importance_pct": 10.863,
+      "family": "rolling-window"
+    },
+    {
+      "feature": "duration",
+      "importance": 4508.6,
+      "importance_pct": 10.388,
+      "family": "structural"
+    },
+    {
+      "feature": "feature_mean_x_duration",
+      "importance": 4495.8,
+      "importance_pct": 10.359,
+      "family": "other"
+    },
+    {
+      "feature": "duration_x_path_failure_rate",
+      "importance": 3880.0,
+      "importance_pct": 8.94,
+      "family": "other"
+    },
+    {
+      "feature": "start_time",
+      "importance": 3028.0,
+      "importance_pct": 6.977,
+      "family": "structural"
+    },
+    {
+      "feature": "rolling_fail_rate_w10000",
+      "importance": 1858.4,
+      "importance_pct": 4.282,
+      "family": "other"
+    },
+    {
+      "feature": "chunk_id",
+      "importance": 786.4,
+      "importance_pct": 1.812,
+      "family": "structural"
+    },
+    {
+      "feature": "chunk_size",
+      "importance": 1.6,
+      "importance_pct": 0.004,
+      "family": "structural"
+    }
+  ],
+  "dataset_h": [
+    {
+      "feature": "feature_mean",
+      "importance": 5732.8,
+      "importance_pct": 13.209,
+      "family": "structural"
+    },
+    {
+      "feature": "records_last_1hr",
+      "importance": 4867.0,
+      "importance_pct": 11.214,
+      "family": "rolling-window"
+    },
+    {
+      "feature": "duration",
+      "importance": 4737.4,
+      "importance_pct": 10.916,
+      "family": "structural"
+    },
+    {
+      "feature": "density_ratio",
+      "importance": 4698.6,
+      "importance_pct": 10.826,
+      "family": "rolling-window"
+    },
+    {
+      "feature": "records_last_24hr",
+      "importance": 4310.2,
+      "importance_pct": 9.931,
+      "family": "rolling-window"
+    },
+    {
+      "feature": "start_time",
+      "importance": 2788.2,
+      "importance_pct": 6.424,
+      "family": "structural"
+    },
+    {
+      "feature": "transition_fail_rate_mean",
+      "importance": 2580.8,
+      "importance_pct": 5.947,
+      "family": "transition/co-occurrence"
+    },
+    {
+      "feature": "transition_fail_rate_std",
+      "importance": 2566.6,
+      "importance_pct": 5.914,
+      "family": "transition/co-occurrence"
+    },
+    {
+      "feature": "path_count",
+      "importance": 2484.4,
+      "importance_pct": 5.724,
+      "family": "path/target-rate"
+    },
+    {
+      "feature": "station_risk_mean",
+      "importance": 2251.0,
+      "importance_pct": 5.187,
+      "family": "path/target-rate"
+    },
+    {
+      "feature": "pair_cooccur_std",
+      "importance": 2174.0,
+      "importance_pct": 5.009,
+      "family": "transition/co-occurrence"
+    },
+    {
+      "feature": "pair_cooccur_mean",
+      "importance": 2034.0,
+      "importance_pct": 4.687,
+      "family": "transition/co-occurrence"
+    },
+    {
+      "feature": "transition_fail_rate_max",
+      "importance": 1084.2,
+      "importance_pct": 2.498,
+      "family": "transition/co-occurrence"
+    },
+    {
+      "feature": "chunk_id",
+      "importance": 760.6,
+      "importance_pct": 1.753,
+      "family": "structural"
+    },
+    {
+      "feature": "pair_cooccur_max",
+      "importance": 329.0,
+      "importance_pct": 0.758,
+      "family": "transition/co-occurrence"
+    },
+    {
+      "feature": "chunk_size",
+      "importance": 1.2,
+      "importance_pct": 0.003,
+      "family": "structural"
+    }
+  ],
+  "meta_model": [
+    {
+      "feature": "dataset_h_pred",
+      "importance": 8346.4,
+      "importance_pct": 19.231,
+      "family": "meta-stack"
+    },
+    {
+      "feature": "std_prediction",
+      "importance": 8078.0,
+      "importance_pct": 18.613,
+      "family": "meta-stack"
+    },
+    {
+      "feature": "dataset_g_pred",
+      "importance": 7479.4,
+      "importance_pct": 17.234,
+      "family": "meta-stack"
+    },
+    {
+      "feature": "baseline_pred",
+      "importance": 7273.8,
+      "importance_pct": 16.76,
+      "family": "meta-stack"
+    },
+    {
+      "feature": "mean_prediction",
+      "importance": 6836.2,
+      "importance_pct": 15.752,
+      "family": "meta-stack"
+    },
+    {
+      "feature": "max_prediction",
+      "importance": 5277.6,
+      "importance_pct": 12.16,
+      "family": "meta-stack"
+    },
+    {
+      "feature": "agreement_count",
+      "importance": 108.6,
+      "importance_pct": 0.25,
+      "family": "meta-stack"
+    }
+  ]
+}

@@ -1,0 +1,167 @@
+{
+  "baseline": {
+    "label": "Baseline",
+    "rows": 1183747,
+    "feature_count": 8,
+    "best_threshold": 0.36,
+    "oof_mcc": 0.022542612263376553,
+    "data_fingerprint": "b2b69d3289bd69f0",
+    "fold_metrics": [
+      {
+        "fold": 0.0,
+        "rows": 240000.0,
+        "best_threshold": 0.38,
+        "mcc": 0.025561411498367496
+      },
+      {
+        "fold": 1.0,
+        "rows": 240000.0,
+        "best_threshold": 0.72,
+        "mcc": 0.03328753757503048
+      },
+      {
+        "fold": 2.0,
+        "rows": 233747.0,
+        "best_threshold": 0.33,
+        "mcc": 0.02215852770408468
+      },
+      {
+        "fold": 3.0,
+        "rows": 240000.0,
+        "best_threshold": 0.35,
+        "mcc": 0.02650532532162763
+      },
+      {
+        "fold": 4.0,
+        "rows": 230000.0,
+        "best_threshold": 0.38,
+        "mcc": 0.02460186275943208
+      }
+    ]
+  },
+  "dataset_g": {
+    "label": "Dataset G (target-rate features)",
+    "rows": 1183747,
+    "feature_count": 12,
+    "best_threshold": 0.9,
+    "oof_mcc": 0.13662344610663257,
+    "data_fingerprint": "0487c5e79a3a0445",
+    "fold_metrics": [
+      {
+        "fold": 0.0,
+        "rows": 240000.0,
+        "best_threshold": 0.82,
+        "mcc": 0.12320530646495163
+      },
+      {
+        "fold": 1.0,
+        "rows": 240000.0,
+        "best_threshold": 0.9,
+        "mcc": 0.1170069431778706
+      },
+      {
+        "fold": 2.0,
+        "rows": 233747.0,
+        "best_threshold": 0.93,
+        "mcc": 0.16404161412845072
+      },
+      {
+        "fold": 3.0,
+        "rows": 240000.0,
+        "best_threshold": 0.89,
+        "mcc": 0.1264501953177097
+      },
+      {
+        "fold": 4.0,
+        "rows": 230000.0,
+        "best_threshold": 0.9,
+        "mcc": 0.16101005612822383
+      }
+    ]
+  },
+  "dataset_h": {
+    "label": "Dataset H (transition + co-occurrence features)",
+    "rows": 1183747,
+    "feature_count": 16,
+    "best_threshold": 0.91,
+    "oof_mcc": 0.15337427546151036,
+    "data_fingerprint": "a5bb652f2b20aca6",
+    "fold_metrics": [
+      {
+        "fold": 0.0,
+        "rows": 240000.0,
+        "best_threshold": 0.77,
+        "mcc": 0.13813049456675183
+      },
+      {
+        "fold": 1.0,
+        "rows": 240000.0,
+        "best_threshold": 0.83,
+        "mcc": 0.13536049518685206
+      },
+      {
+        "fold": 2.0,
+        "rows": 233747.0,
+        "best_threshold": 0.95,
+        "mcc": 0.18114126258812918
+      },
+      {
+        "fold": 3.0,
+        "rows": 240000.0,
+        "best_threshold": 0.91,
+        "mcc": 0.15276717787630192
+      },
+      {
+        "fold": 4.0,
+        "rows": 230000.0,
+        "best_threshold": 0.84,
+        "mcc": 0.1849753564964327
+      }
+    ]
+  },
+  "meta_model": {
+    "label": "Meta-Model (stacked)",
+    "rows": 1183747,
+    "feature_count": 7,
+    "best_threshold": 0.96,
+    "oof_mcc": 0.14941611747538763,
+    "data_fingerprint": "ebfd40c6c929d7af",
+    "fold_metrics": [
+      {
+        "fold": 0.0,
+        "rows": 240000.0,
+        "best_threshold": 0.83,
+        "mcc": 0.13577431580669144
+      },
+      {
+        "fold": 1.0,
+        "rows": 240000.0,
+        "best_threshold": 0.92,
+        "mcc": 0.13148789686293993
+      },
+      {
+        "fold": 2.0,
+        "rows": 233747.0,
+        "best_threshold": 0.96,
+        "mcc": 0.16823609692303415
+      },
+      {
+        "fold": 3.0,
+        "rows": 240000.0,
+        "best_threshold": 0.93,
+        "mcc": 0.14414567770117398
+      },
+      {
+        "fold": 4.0,
+        "rows": 230000.0,
+        "best_threshold": 0.96,
+        "mcc": 0.1757069236131779
+      }
+    ],
+    "base_thresholds": {
+      "baseline": 0.36,
+      "dataset_g": 0.9,
+      "dataset_h": 0.91
+    }
+  }
+}

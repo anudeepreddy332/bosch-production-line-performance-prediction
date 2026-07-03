@@ -22,6 +22,17 @@ regimes → separately, a 9-experiment, fully-attributed Kaggle research program
 same dataset's competition leaderboard from 0.162 to **0.419 private MCC**, entirely through
 mechanisms this project's own charter excludes from production.
 
+**Dashboard:** an interactive recruiter-facing dashboard — Story / Decision Explorer / Model
+Internals / Governance & Reproducibility — lives in [`dashboard/`](dashboard/) and deploys via
+[`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml) to Netlify at
+`bosch.themachinist.org` (live link goes here once DNS is attached, post-CP4). Every number it
+shows is exported straight from committed pipeline artifacts by
+[`scripts/ops/export_dashboard_data.py`](scripts/ops/export_dashboard_data.py) — nothing hand-typed.
+Run it locally: `cd dashboard && npm ci && npm run dev`.
+
+<img src="docs/assets/dashboard_story_page.png" width="700" alt="Dashboard Story page: headline honest MCC range, per-window rolling-origin table, and system summary"><br>
+<img src="docs/assets/dashboard_decision_explorer.png" width="700" alt="Dashboard Decision Explorer page: live threshold slider, cost model, and PR/ROC curves for all four models">
+
 ## Start here
 
 | Document | What it's for |
@@ -31,6 +42,7 @@ mechanisms this project's own charter excludes from production.
 | **[`docs/research/kaggle_decisions.md`](docs/research/kaggle_decisions.md)** | The full, pre-registered Kaggle research log (KDR-001–KDR-009) |
 | **[`results/leaderboard.json`](results/leaderboard.json)** | Machine-readable results registry — the source of truth for every Kaggle number in this repo |
 | **[`docs/implementation/portfolio_master_plan.md`](docs/implementation/portfolio_master_plan.md)** | The execution ledger currently driving this repository's engineering roadmap |
+| **[`dashboard/`](dashboard/)** | Recruiter dashboard source (Vite + React + TypeScript) |
 
 ---
 

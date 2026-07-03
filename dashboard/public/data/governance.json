@@ -1,0 +1,218 @@
+{
+  "repo_url": "https://github.com/anudeepreddy332/bosch-production-line-defect-analysis",
+  "leaderboard": {
+    "schema_version": "1.0",
+    "generated": "2026-07-03",
+    "source_of_truth": "docs/research/kaggle_decisions.md",
+    "program_status": "FROZEN at P1-result (2026-07-03) per KDR-009; Track 2 (Kaggle) closed, no further experiments authorized",
+    "notes": [
+      "This file is the single source of truth for every result number quoted in README, SYSTEM_OVERVIEW, the case study, the dashboard, the docs site, and release artifacts (docs/implementation/portfolio_master_plan.md, standing rule 8).",
+      "oof_mcc is the project's internal leakage-safe cross-validation metric (never used as a production gate for anything in this log). public_mcc/private_mcc are Kaggle competition leaderboard metrics on Kaggle's held-out test set.",
+      "oof_status distinguishes 'honest' (label-free, valid ranking metric) from 'contaminated' (leaks label information across CV folds via a leaky feature, e.g. train-neighbor Response lookup) OOF measurements -- contaminated values must never be compared to an honest MCC (see kaggle_decisions.md, 'What must never happen').",
+      "Every value below is transcribed from, and traceable to, the Evidence/Outcome/Decision sections of docs/research/kaggle_decisions.md. The one exception is noted per-row in the P1 entry's 'notes' field."
+    ],
+    "experiments": [
+      {
+        "experiment_id": "K1",
+        "kdr": "KDR-002",
+        "kdr_file": "docs/research/kaggle_decisions.md",
+        "date": "2026-06-28",
+        "mechanism": "Reproduce the frozen dataset_h production model end-to-end via the verified submission pipeline; establishes the honest Track 2 baseline. No new features, no training, no tuning.",
+        "feature_count": 16,
+        "oof_mcc": 0.15337,
+        "oof_status": "honest",
+        "threshold": 0.91,
+        "public_mcc": 0.14389,
+        "private_mcc": 0.1616,
+        "data_fingerprint": "a5bb652f2b20aca6",
+        "git_tag": "K1-result",
+        "hypothesis": null,
+        "hypothesis_result": "PASS -- reproducibility check (not hypothesis-banded); row count/positive count/Id-set/threshold all matched the pre-registered criteria exactly",
+        "notes": "Public/private LB scores were originally established by the pre-Kaggle-track dataset_h production submission (docs/dataset_h_submission_run.md); K1 confirms the artifact that produced those scores is reproducible byte-for-byte from committed code."
+      },
+      {
+        "experiment_id": "K2",
+        "kdr": "KDR-003",
+        "kdr_file": "docs/research/kaggle_decisions.md",
+        "date": "2026-07-02",
+        "mechanism": "Record-adjacency 'magic' features: 3 sort orders (Id, station start-time, compound) x (Id/time deltas, same-neighbor flags, train-neighbor Response lookup) added to dataset_h's 16 clean features.",
+        "feature_count": 40,
+        "oof_mcc": 0.3753,
+        "oof_status": "contaminated",
+        "threshold": 0.98,
+        "public_mcc": 0.31699,
+        "private_mcc": 0.32702,
+        "data_fingerprint": "3dc7fb742ce24ecf",
+        "git_tag": "K2-result",
+        "hypothesis": "H_adjacency_dominant",
+        "hypothesis_result": "CONFIRMED",
+        "notes": "Contaminated OOF (train-neighbor Response leaks across CV folds) -- not comparable to an honest MCC; the LB is the only valid measurement of this model. Recovers ~49% of the documented honest-to-leaky leaderboard gap."
+      },
+      {
+        "experiment_id": "K3-A",
+        "kdr": "KDR-004",
+        "kdr_file": "docs/research/kaggle_decisions.md",
+        "date": "2026-07-02",
+        "mechanism": "Ablation of K2 (position-only variant): the 18 label-free position/delta/tie-flag columns, excluding all 6 train-neighbor-Response columns. Isolates record-proximity from neighbor-label leakage.",
+        "feature_count": 34,
+        "oof_mcc": 0.31761,
+        "oof_status": "honest",
+        "threshold": 0.98,
+        "public_mcc": 0.31791,
+        "private_mcc": 0.33161,
+        "data_fingerprint": "e02a1d4e1106fbaa",
+        "git_tag": "K3-result",
+        "hypothesis": "H_position_dominant",
+        "hypothesis_result": "CONFIRMED",
+        "notes": "Slightly exceeds K2's full-magic score on both LB splits despite dropping all 6 label-touching columns -- record proximity alone explains the entire observable K2 gain."
+      },
+      {
+        "experiment_id": "K3-B",
+        "kdr": "KDR-004",
+        "kdr_file": "docs/research/kaggle_decisions.md",
+        "date": "2026-07-02",
+        "mechanism": "Ablation of K2 (label-only variant): only the 6 train-neighbor-Response columns (nearest train-neighbor Response, prev/next, across 3 sort orders). Isolates neighbor-label leakage from record-proximity.",
+        "feature_count": 22,
+        "oof_mcc": 0.21171,
+        "oof_status": "contaminated",
+        "threshold": 0.95,
+        "public_mcc": 0.10065,
+        "private_mcc": 0.1053,
+        "data_fingerprint": "1c98082a35397fd5",
+        "git_tag": "K3-result",
+        "hypothesis": "H_label_contributes / H_position_optimistic",
+        "hypothesis_result": "REJECTED (both)",
+        "notes": "Falls below even the K1 honest baseline on both LB splits -- the neighbor-label columns are actively harmful in isolation, not merely unhelpful. Neighbor-label leakage retired as a research direction after this result."
+      },
+      {
+        "experiment_id": "K4",
+        "kdr": "KDR-005",
+        "kdr_file": "docs/research/kaggle_decisions.md",
+        "date": "2026-07-02",
+        "mechanism": "Label-free timing-cohort geometry: min/max-date group size, position, and k=2/k=3 lag features, layered additively on K3-A's 34-feature winning stack.",
+        "feature_count": 52,
+        "oof_mcc": 0.32192,
+        "oof_status": "honest",
+        "threshold": 0.98,
+        "public_mcc": 0.31697,
+        "private_mcc": 0.33447,
+        "data_fingerprint": "00b4ed30ea58762d",
+        "git_tag": "K4-result",
+        "hypothesis": "H_cohort_modest",
+        "hypothesis_result": "CONFIRMED (at the low end of the pre-registered band)",
+        "notes": "K2 (0.31699) -> K3-A (0.31791) -> K4 (0.31697): a spread of 0.00094 public LB across three experiments with materially different feature engineering -- the record-order/timing family was declared saturated after this result."
+      },
+      {
+        "experiment_id": "K5-A",
+        "kdr": "KDR-006",
+        "kdr_file": "docs/research/kaggle_decisions.md",
+        "date": "2026-07-02",
+        "mechanism": "Raw-signature duplicate/identity keys (key_date, key_numeric, key_nanpat) and derived group-size/rank/chain features, label-free, layered additively on K3-A's winning stack.",
+        "feature_count": 51,
+        "oof_mcc": 0.32506,
+        "oof_status": "honest",
+        "threshold": 0.98,
+        "public_mcc": 0.3233,
+        "private_mcc": 0.33711,
+        "data_fingerprint": "e9df7ffff186b6fa",
+        "git_tag": "K5-result",
+        "hypothesis": "H_duplicate_material",
+        "hypothesis_result": "CONFIRMED (label-free component)",
+        "notes": "This model's data_fingerprint (e9df7ffff186b6fa) is reused as the fixed regression-anchor target for every subsequent wide-modeling experiment (P0 Cell A, P1 R0)."
+      },
+      {
+        "experiment_id": "K5-B",
+        "kdr": "KDR-006",
+        "kdr_file": "docs/research/kaggle_decisions.md",
+        "date": "2026-07-02",
+        "mechanism": "Identity-conditioned train-neighbor Response lookup (8 label-touching columns keyed on raw-signature identity, not adjacency), layered additively on K3-A's winning stack.",
+        "feature_count": 42,
+        "oof_mcc": 0.57828,
+        "oof_status": "contaminated",
+        "threshold": 0.95,
+        "public_mcc": 0.33571,
+        "private_mcc": 0.33989,
+        "data_fingerprint": "e6faaf3d92fdaa43",
+        "git_tag": "K5-result",
+        "hypothesis": "H_duplicate_material",
+        "hypothesis_result": "CONFIRMED (via this variant's clause)",
+        "notes": "Contaminated OOF (identity-conditioned train-neighbor Response); LB-only measurement, best model in the program to date at time of measurement, superseded by P0. Confirms identity-conditioned label transfer as materially real where K3-B's adjacency-conditioned label transfer was not -- a distinct mechanism, not a contradiction of K3."
+      },
+      {
+        "experiment_id": "P0",
+        "kdr": "KDR-007",
+        "kdr_file": "docs/research/kaggle_decisions.md",
+        "date": "2026-07-02",
+        "mechanism": "Raw ~968-column numeric sensor matrix (Cell C: K5-A's 51-column honest stack + full raw numeric columns), high-capacity LightGBM (n_estimators=2500, no early stopping triggered in any fold).",
+        "feature_count": 1025,
+        "oof_mcc": 0.37892,
+        "oof_status": "honest",
+        "threshold": 0.96,
+        "public_mcc": 0.39226,
+        "private_mcc": 0.40391,
+        "data_fingerprint": "f4a25438ad901355",
+        "git_tag": "P0-result",
+        "hypothesis": "H_raw_dominant",
+        "hypothesis_result": "CONFIRMED",
+        "notes": "Largest single-experiment OOF and private-LB gain in the program (+0.05386 OOF, +0.06680 private over K5-A). Regression anchor (Cell A, 51 K5-A columns) reproduced K5-A's OOF 0.32506 exactly, data_fingerprint e9df7ffff186b6fa, before Cell C was trusted."
+      },
+      {
+        "experiment_id": "P1",
+        "kdr": "KDR-008",
+        "kdr_file": "docs/research/kaggle_decisions.md",
+        "date": "2026-07-03",
+        "mechanism": "Per-station date-offset/weekly-position/transit features (Family D, 57 cols) + station/line numeric mean/std aggregates (Family S/L, 108 cols) on P0's Cell C stack, plus LightGBM capacity tuning (num_leaves 63->255, min_child_samples 50->20). Winning run: R5.",
+        "feature_count": 1190,
+        "oof_mcc": 0.39484,
+        "oof_status": "honest",
+        "threshold": 0.89,
+        "public_mcc": 0.40447,
+        "private_mcc": 0.41917,
+        "data_fingerprint": "c602cd26810cf626",
+        "git_tag": "P1-result",
+        "hypothesis": "H_station_temporal_moderate",
+        "hypothesis_result": "CONFIRMED",
+        "notes": "Best result in the program to date. data_fingerprint c602cd26810cf626 (shared across runs R2-R5, same input dataset) is recorded in the local operational log docs/agent_memory/claude_state.md (gitignored, not published); kaggle_decisions.md's P1 evidence table itself publishes only the R0 regression-anchor fingerprint (e9df7ffff186b6fa) inline, not a per-run column like P0's evidence table. Attribution: feature families alone contributed only +0.00306 OOF; relieving LightGBM capacity on top of them recovered +0.01286 OOF -- capacity tuning, not feature engineering, was the dominant lever."
+      }
+    ]
+  },
+  "kdr_headings": [
+    {
+      "kdr": "KDR-001",
+      "heading": "KDR-001 \u2014 Open the Kaggle (Track 2) leaderboard-optimization track"
+    },
+    {
+      "kdr": "KDR-002",
+      "heading": "KDR-002 \u2014 Pre-register K1: baseline reproduction from frozen production candidate"
+    },
+    {
+      "kdr": "KDR-003",
+      "heading": "KDR-003 \u2014 Pre-register K2: quantify the leakage gap via record-adjacency \"magic\" features"
+    },
+    {
+      "kdr": "KDR-004",
+      "heading": "KDR-004 \u2014 Pre-register K3: attribute K2's gain between record-proximity and neighbor-label leakage"
+    },
+    {
+      "kdr": "KDR-005",
+      "heading": "KDR-005 \u2014 Pre-register K4: label-free timing-cohort geometry"
+    },
+    {
+      "kdr": "KDR-006",
+      "heading": "KDR-006 \u2014 Pre-register K5: duplicate-group (feature-identity) leakage attribution"
+    },
+    {
+      "kdr": "KDR-007",
+      "heading": "KDR-007 \u2014 Amend Track 2 objective; pre-register P0: raw-numeric signal probe"
+    },
+    {
+      "kdr": "KDR-008",
+      "heading": "KDR-008 \u2014 Pre-register P1: station-temporal feature engineering + capacity tuning"
+    },
+    {
+      "kdr": "KDR-009",
+      "heading": "KDR-009 \u2014 Freeze Track 2 (Kaggle); transition to portfolio engineering"
+    }
+  ],
+  "kaggle_decisions_path": "docs/research/kaggle_decisions.md"
+}

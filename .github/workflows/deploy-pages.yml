@@ -1,0 +1,111 @@
+name: deploy-pages
+
+# Builds and deploys the recruiter dashboard (dashboard/) to Netlify.
+#
+# PF4's frozen spec (docs/implementation/portfolio_master_plan.md) named
+# Cloudflare Pages. Deviation (2026-07-03, user-authorized, logged in PF4's
+# section): the user already owns themachinist.org (Porkbun) and already
+# hosts on Netlify Free. Evaluated Netlify against every PF4 hosting
+# requirement -- custom domain + free TLS, CI-triggered deploy, PR preview
+# deployments, SPA redirect support (_redirects, identical syntax on both
+# platforms), one-site-multiple-paths for PF5's future /docs/ mount -- and
+# found no gap and no concrete Cloudflare advantage for a single low-traffic
+# static site. Netlify reuses infrastructure the user already operates
+# (no new account, no DNS nameserver migration -- just one CNAME record at
+# Porkbun), which is the simpler production architecture. Kept this
+# workflow's filename as the frozen spec named it; only the deploy target
+# changed.
+#
+# Runs only when dashboard/ changes. The JSON data bundle under
+# dashboard/public/data/ is committed by scripts/ops/export_dashboard_data.py
+# (run locally, not in CI -- CI has no access to the gitignored parquets it
+# reads), so this workflow only builds and ships the already-committed
+# bundle.
+#
+# Requires two repo secrets before this workflow can succeed (user-side
+# setup, not created by this workflow): NETLIFY_AUTH_TOKEN (a personal
+# access token from Netlify user settings) and NETLIFY_SITE_ID (the target
+# site's API ID, from Site settings -> General -> Site details). Until both
+# secrets are set, this workflow will fail at the deploy step -- build/
+# typecheck/bundle-budget checks above it still run and still gate the PR.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "dashboard/**"
+      - ".github/workflows/deploy-pages.yml"
+  pull_request:
+    paths:
+      - "dashboard/**"
+      - ".github/workflows/deploy-pages.yml"
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dashboard
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: dashboard/.nvmrc
+          cache: "npm"
+          cache-dependency-path: dashboard/package-lock.json
+
+      - name: Install dependencies (pinned, from committed lockfile)
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+      - name: Enforce bundle budget (<=1.5 MB gzipped, JS+CSS)
+        run: |
+          python3 - <<'EOF'
+          import gzip, pathlib, sys
+
+          dist = pathlib.Path("dist/assets")
+          total = 0
+          for f in dist.glob("*"):
+              if f.suffix in (".js", ".css"):
+                  total += len(gzip.compress(f.read_bytes(), 9))
+          budget = 1.5 * 1024 * 1024
+          print(f"Total gzipped JS+CSS: {total / 1024:.1f} KB (budget {budget / 1024:.0f} KB)")
+          if total > budget:
+              print("Bundle exceeds the 1.5 MB gzipped budget.", file=sys.stderr)
+              sys.exit(1)
+          EOF
+
+      - name: Deploy to Netlify (production, main only)
+        if: ${{ github.event_name == 'push' }}
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        run: |
+          set -euo pipefail
+          if [ -z "${NETLIFY_AUTH_TOKEN:-}" ] || [ -z "${NETLIFY_SITE_ID:-}" ]; then
+            echo "::error::NETLIFY_AUTH_TOKEN and/or NETLIFY_SITE_ID repo secrets are not set -- see the comment at the top of this workflow file for setup steps. Failing fast instead of letting netlify-cli fall back to an interactive OAuth login that would time out after 5 minutes."
+            exit 1
+          fi
+          output=$(npx --yes netlify-cli@17 deploy --dir=dist --prod --message="$GITHUB_SHA")
+          echo "$output"
+          echo "$output" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Deploy to Netlify (preview, PRs from this repo only)
+        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        run: |
+          set -euo pipefail
+          if [ -z "${NETLIFY_AUTH_TOKEN:-}" ] || [ -z "${NETLIFY_SITE_ID:-}" ]; then
+            echo "::error::NETLIFY_AUTH_TOKEN and/or NETLIFY_SITE_ID repo secrets are not set -- see the comment at the top of this workflow file for setup steps. Failing fast instead of letting netlify-cli fall back to an interactive OAuth login that would time out after 5 minutes."
+            exit 1
+          fi
+          output=$(npx --yes netlify-cli@17 deploy --dir=dist --message="PR-${{ github.event.pull_request.number }}")
+          echo "$output"
+          echo "$output" >> "$GITHUB_STEP_SUMMARY"

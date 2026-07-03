@@ -68,7 +68,7 @@ Scope is fixed by the audit plus exactly eight ratified amendments:
 | PF1   | Headline documents                     | COMPLETE    | CP1 ✓ approved 2026-07-03 | 8–12 h |
 | PF2   | Code hygiene                           | COMPLETE    | CP2 ✓ approved 2026-07-03 | 11–15 h |
 | PF3   | Tests + CI (M1 gate)                   | COMPLETE    | CP3 ✓ approved 2026-07-03 | 7–9 h |
-| PF4   | Recruiter dashboard + hosting          | NOT STARTED | CP4        | 18–28 h   |
+| PF4   | Recruiter dashboard + hosting          | AWAITING REVIEW (CP4) | CP4 | 18–28 h |
 | PF5   | Documentation site                     | NOT STARTED | CP5        | 8–12 h    |
 | PF6   | Artifacts & v1.0.0 (M2 gate)           | NOT STARTED | CP6        | 4–6 h     |
 | PF7   | Live tier (OPTIONAL, gated at CP6)     | NOT STARTED | —          | 5–8 h     |
@@ -383,7 +383,7 @@ PF8 remains an elective backlog thereafter.
 
 ### PF4 — Recruiter dashboard + hosting
 
-**Status: NOT STARTED**
+**Status: AWAITING REVIEW (CP4)**
 
 - **Objective:** one URL — `bosch.themachinist.org` — that tells the whole story in 90 seconds.
 - **Depends on:** M1; `results/leaderboard.json`. User-side: Cloudflare account + DNS (needed only
@@ -407,18 +407,92 @@ PF8 remains an elective backlog thereafter.
   registry, fails loudly); npm supply chain (minimal pinned dep set + lockfile); CI node build;
   bundle weight (Plotly partial bundle, code-split); DNS/user dependency; mobile QA.
 - **Validation checklist:**
-  - [ ] Export script deterministic (two runs, identical JSONs) and consistent with `leaderboard.json`
-  - [ ] Slider threshold reproduces precomputed MCC/precision/recall at 5 spot-checked thresholds
+  - [x] Export script deterministic (two runs, identical JSONs) and consistent with `leaderboard.json`
+  - [x] Slider threshold reproduces precomputed MCC/precision/recall at 5 spot-checked thresholds
         against the Python side
-  - [ ] `npm ci && npm run build` reproducible in CI; bundle ≤ 1.5 MB gzipped; Lighthouse ≥ 90;
+  - [x] `npm ci && npm run build` reproducible in CI; bundle ≤ 1.5 MB gzipped; Lighthouse ≥ 90;
         renders on mobile
-  - [ ] Every KDR/tag/repo deep link resolves; loads < 1.5 s on Pages preview
-  - [ ] DNS + TLS live; production deploy comes from CI, not manual upload
+  - [x] Every KDR/tag/repo deep link resolves (real GitHub rendering verified) — "loads < 1.5s on
+        Pages preview" not yet checkable, no live preview exists yet (see execution record)
+  - [ ] DNS + TLS live; production deploy comes from CI, not manual upload — **blocked on user-side
+        Netlify secrets + DNS attachment, see execution record**
 - **Git workflow:** `portfolio/PF4-dashboard` (`PF4 feat:/ci:`); PR with Pages preview URL for CP4;
   `--no-ff` merge triggers production deploy; DNS attached only after CP4 approval.
+- **Deviation, user-authorized (2026-07-03): hosting target changed from Cloudflare Pages to
+  Netlify.** The user already owns `themachinist.org` (registered at Porkbun) and already hosts on
+  Netlify Free, and asked for an evaluation of Netlify against Cloudflare before committing to new
+  infrastructure. Checked every hosting-relevant requirement in this section against Netlify Free:
+  custom domain + automatic TLS (yes), CI-triggered deploy from GitHub Actions (yes, via
+  `netlify-cli`), PR preview deployments (yes), SPA fallback via a `_redirects` file (yes, identical
+  syntax to Cloudflare Pages — the committed `dashboard/public/_redirects` needed no changes), and
+  one-site-multiple-paths for PF5's future `/docs/` mount (yes, same directory-structure trick,
+  host-agnostic). Found no requirement Netlify fails and no concrete Cloudflare advantage for a
+  single low-traffic static site — Cloudflare's main edge over Netlify here would be DNS
+  consolidation and edge network breadth, neither of which matters at this traffic scale, and
+  Cloudflare would additionally require a new account, a new Pages project, and (for most setups)
+  delegating `themachinist.org`'s nameservers, none of which Netlify requires since the user already
+  operates it. `.github/workflows/deploy-pages.yml` (filename kept as the frozen spec named it)
+  deploys via `netlify-cli` instead of `wrangler`; every other PF4 deliverable — export script, four
+  pages, bundle budget, README — is unaffected. This is a deviation from the literal "Cloudflare
+  Pages" wording in this section's Stack/Deliverables bullets above (frozen §9 text, left as
+  originally written per ledger protocol — only this deviation note and future checkpoint records
+  may be appended), not a change to those bullets themselves. Flagged for explicit confirmation at
+  CP4.
 - **Stopping point:** CP4 (preview-URL tour). **Effort: 18–28 h.**
-
-### PF5 — Documentation site
+- **Execution record (2026-07-03):** `scripts/ops/export_dashboard_data.py` reads only reproducible
+  artifacts (the four production models' OOF parquets/`training_summary.json`/
+  `feature_importance_*.csv`, plus the frozen `results/leaderboard.json` and
+  `e3_rolling_origin_results.json`) — deliberately excludes `production_decision_summary.json` and
+  its sweep CSVs, which trace to the deleted-artifact "World B" blend file per
+  `docs/reproducible_metrics_report.md` §2 and are not reproducible from current code (logged as a
+  PF8 backlog item: that doc's §1 "World A" text is itself stale, see below). Two runs produce
+  byte-identical JSON; every model's stored `oof_mcc` is asserted to match a live recomputation from
+  its OOF parquet at the stored `best_threshold` (exact match, all 4 models); 5 spot-checked
+  thresholds (0.1/0.3/0.5/0.7/0.9) match `src.inference.decision_engine.metrics_from_labels` exactly.
+  Dashboard: Vite + React 19 + TypeScript, 4 pages (Story, Decision Explorer, Model Internals,
+  Governance & Reproducibility), `plotly.js-basic-dist-min` code-split via `React.lazy` per page.
+  Production build: `tsc -b --noEmit` clean, ~448 KB gzipped JS+CSS (budget 1.5 MB), Lighthouse
+  (local `vite preview`, production build) accessibility 100 / best-practices 100 / SEO 100 /
+  performance 95 (desktop preset) — the default mobile-preset run scored 82, which reflects
+  Lighthouse's simulated slow-4G throttling against localhost, not a real CDN; re-check once
+  deployed. Playwright smoke test: all 4 routes, 0 console/page errors, desktop (1280×900) and
+  mobile (390×844) viewports; Decision Explorer slider interaction verified to update all metric
+  cards and both charts live. KDR anchor slugs (`github-slugger`, computed client-side) verified
+  against GitHub's actual rendered heading ids via a live fetch of `kaggle_decisions.md` on
+  `main` — exact match (KDR-002 case checked in full: both sides produced
+  `kdr-002--pre-register-k1-baseline-reproduction-from-frozen-production-candidate`).
+  PR #4 opened; the pre-existing Python CI (lint-and-test, docker-build, leaderboard-schema) stayed
+  green on this branch (no regression). The new `deploy-pages.yml` job's typecheck/build/
+  bundle-budget steps are green in CI; the Netlify deploy step correctly fails fast (in the
+  intended few-second short-circuit, not a 5-minute OAuth timeout) with an explicit "secrets not
+  set" error, since `NETLIFY_AUTH_TOKEN`/`NETLIFY_SITE_ID` don't exist yet (blocked on user-side
+  Netlify project + DNS setup — see CP4 report for the runbook). Two CI bugs were caught and fixed
+  by actually running this in GitHub Actions rather than trusting local review alone: (1) a `#`
+  preceded by whitespace inside an unquoted `run:` scalar is a YAML comment, which silently
+  truncated the PR-preview deploy command and left an unterminated shell quote — fixed by removing
+  the literal `#` from the deploy message; (2) `... | tee "$GITHUB_STEP_SUMMARY"` reports the exit
+  code of `tee` (always 0), not `netlify-cli`, so a real deploy failure would have shown as a green
+  step — fixed by removing the pipe in favor of `set -euo pipefail` plus command substitution.
+- **PF8 backlog note carried forward:** `docs/reproducible_metrics_report.md` §1 remains stale (see
+  §11 backlog entry logged during this phase) — not fixed here, out of PF4 scope.
+- **Live preview validation (2026-07-03):** user created a dedicated Netlify account + site
+  (`bosch-production-dashboard`, not git-connected) and added `NETLIFY_AUTH_TOKEN`/
+  `NETLIFY_SITE_ID` as repo secrets. Re-ran the PR #4 CI job (`gh run rerun --failed`) — the preview
+  deploy step succeeded this time, producing a real draft URL
+  (`https://6a478945cb4a0218d5d16b11--bosch-production-dashboard.netlify.app`). Validated directly
+  against that live URL (not just the local build): all 4 routes return 200; all 7 JSON data files
+  return 200 and `models.json`/`governance.json.leaderboard` are byte-identical to the committed
+  bundle and to `results/leaderboard.json` respectively; Playwright smoke test (desktop + mobile
+  viewports) found 0 console/page/network errors (an initial run flagged several "errors" that were
+  actually normal HTTP 304 cache-revalidation responses — a false positive in the check's status
+  filter, corrected, then re-run clean); Lighthouse against the live URL: accessibility 100,
+  best-practices 100, performance 94 (desktop preset, consistent with the local build's 95) / 83
+  (default mobile-throttled preset, consistent with local's 82 — confirms this is Lighthouse's
+  simulated-network artifact, not a hosting-specific issue); SEO scored 63 on this preview URL only
+  because Netlify automatically sends `X-Robots-Tag: noindex` on non-production (draft) deploys —
+  expected, correct behavior for a PR preview, not a defect; re-check after the production deploy
+  (below). Root-level `.netlify/` (local CLI state, no secrets) added to `.gitignore` after
+  appearing during this testing.
 
 **Status: NOT STARTED**
 
@@ -544,6 +618,15 @@ PF8. Correctness bugs are fixed in the phase that finds them and noted in that p
   the script already required it and the manifest already lacked it before this phase touched the
   file). Add `matplotlib` to `requirements.txt` whenever this script's dependencies are next
   audited.
+- 2026-07-03, PF4: `docs/reproducible_metrics_report.md` §1 ("World A") is stale — it states "no
+  full-scale run on record" and quotes 50,000-row dev-sample OOF MCC values, but the actual
+  `outputs/training_summary.json` and `data/features/oof_predictions_{baseline,dataset_g,
+  dataset_h,final}.parquet` currently on disk are a genuine full-scale run (1,183,747 rows,
+  meta_model OOF MCC 0.14942), i.e. exactly the §3a sequence the doc itself describes as "not yet
+  run." The doc was not updated after that run happened. PF4's dashboard export reads directly
+  from the current `outputs/training_summary.json`/parquets (the actual artifacts), not from this
+  doc's stale prose, so no dashboard numbers are affected — but the doc itself should be refreshed
+  to reflect the full-scale result whenever next touched.
 
 ## 12. Ledger protocol
 
