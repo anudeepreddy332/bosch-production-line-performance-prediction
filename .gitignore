@@ -83,3 +83,5 @@ CLAUDE.md
 bosch_agent.md
 chatgpt_handoff
 docs/agent_memory/
+# Local Netlify folder
+.netlify
