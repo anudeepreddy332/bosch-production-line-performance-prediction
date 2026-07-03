@@ -684,13 +684,20 @@ PF8 remains an elective backlog thereafter.
 
 ### PF8 — Polish + backlog (OPTIONAL, elective, post-M2)
 
-**Status: NOT STARTED**
+**Status: IN PROGRESS (dashboard presentation pass)**
 
 - **Fixed items:** Decision-Explorer GIF; tag-timeline graphic; `CITATION.cff`;
   `.pre-commit-config.yaml` (ruff + whitespace); blog post on themachinist.org. Each independent,
   1–2 h; branch per item or one `portfolio/PF8-polish`; no checkpoint beyond tone review of the
   blog post.
 - **Backlog intake:** see §11.
+- **User-authorized elective item (2026-07-03): dashboard UX/presentation refinement pass**, on
+  branch `portfolio/PF8-dashboard-polish`, with an explicit CP8 review checkpoint (deviation from
+  the "no checkpoint" default above, at the user's direction). Scope is presentation-only:
+  storytelling, layout, typography, plain-English explanations, accordions for advanced material,
+  and a repo-wide first-person ("I", not "we") language sweep across living docs. Hard
+  constraints set by the user: no metric/data/JSON-format changes, no engineering or governance
+  changes, no evidence removal; historical logs stay append-only. Not merged until CP8 approval.
 
 ## 10. Frozen technical decisions
 
