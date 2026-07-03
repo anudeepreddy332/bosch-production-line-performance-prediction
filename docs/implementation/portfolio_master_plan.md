@@ -64,8 +64,8 @@ Scope is fixed by the audit plus exactly eight ratified amendments:
 
 | Phase | Name                                   | Status      | Checkpoint | Effort    |
 |-------|-----------------------------------------|-------------|------------|-----------|
-| PF0   | Research freeze & unification + registry | AWAITING REVIEW (CP0) | CP0 | 4–7 h |
-| PF1   | Headline documents                     | NOT STARTED | CP1        | 8–12 h    |
+| PF0   | Research freeze & unification + registry | COMPLETE    | CP0 ✓ approved 2026-07-03 | 4–7 h |
+| PF1   | Headline documents                     | IN PROGRESS | CP1        | 8–12 h    |
 | PF2   | Code hygiene                           | NOT STARTED | CP2        | 11–15 h   |
 | PF3   | Tests + CI (M1 gate)                   | NOT STARTED | CP3        | 7–9 h     |
 | PF4   | Recruiter dashboard + hosting          | NOT STARTED | CP4        | 18–28 h   |
@@ -136,7 +136,7 @@ PF8 remains an elective backlog thereafter.
 
 ### PF0 — Research freeze, unification, registry, ledger
 
-**Status: AWAITING REVIEW (CP0)**
+**Status: COMPLETE (CP0 approved 2026-07-03)**
 
 - **Objective:** `main` becomes the single public source of truth; Track 2 formally frozen; the
   results registry and this ledger established; metadata table stakes in place.
@@ -162,15 +162,15 @@ PF8 remains an elective backlog thereafter.
   `docs/agent_memory/claude_state.md`. External: GitHub description/topics.
 - **Risks:** deleting branches before verifying tag reachability; editing existing KDR sections
   instead of appending; registry transcription errors.
-- **Validation checklist:**
-  - [ ] `git merge-base --is-ancestor main kaggle-main` true before FF; `git rev-parse` identical after
-  - [ ] All tags resolve and are reachable from `main`; `git branch --merged main` shows both
+- **Validation checklist (all verified — see CP0 report):**
+  - [x] `git merge-base --is-ancestor main kaggle-main` true before FF; `git rev-parse` identical after
+  - [x] All tags resolve and are reachable from `main`; `git branch --merged main` shows both
         branches merged before deletion
-  - [ ] Firewall grep clean on `main`
-  - [ ] KDR-009 diff touches no existing lines in the log
-  - [ ] `leaderboard.json` parses; exactly 9 rows; every OOF/public/private value grep-matched
+  - [x] Firewall grep clean on `main`
+  - [x] KDR-009 diff touches no existing lines in the log
+  - [x] `leaderboard.json` parses; exactly 9 rows; every OOF/public/private value grep-matched
         against `kaggle_decisions.md` evidence sections; fingerprints and tags present
-  - [ ] `git ls-files | grep __pycache__` empty; `git status` clean
+  - [x] `git ls-files | grep __pycache__` empty; `git status` clean
 - **Git workflow:** FF merge + push; then `portfolio/PF0-freeze-metadata` with commits —
   `PF0 docs:` ledger; `PF0 docs:` leaderboard.json; `PF0 docs:` KDR-009 + tracks; `PF0 chore:`
   LICENSE/.env.example/gitignore/pycache — `--no-ff` merge, tag `track2-frozen`, push with tags,
@@ -184,6 +184,9 @@ PF8 remains an elective backlog thereafter.
   tracked and `.gitignore` already covered `__pycache__/` — that sub-item required no change.
   Full command-level evidence and final branch-deletion/GitHub-metadata confirmation are recorded
   in the CP0 report delivered alongside this commit, not duplicated here.
+- **CP0 outcome (2026-07-03): APPROVED.** Merge commit `31cdc10` (tag `track2-frozen` ->
+  `895094c`) pushed to `origin/main`; `kaggle-main` and `training-pipeline` verified merged and
+  deleted (local + remote); GitHub description/topics set. No corrections requested at CP0.
 
 ### PF1 — Headline documents
 
