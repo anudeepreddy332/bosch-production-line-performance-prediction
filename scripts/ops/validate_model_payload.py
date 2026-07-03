@@ -1,34 +1,29 @@
 """Validate the model artifact "payload" contract introduced in Phase 2
 (feature/model-contract-and-persistence).
 
-Checks that a model artifact dict has the shape BoschPredictor / TwoStagePredictor
-already expect (``{"models": [[...]], "feature_cols": [...], "threshold": ...}``)
-plus the richer provenance fields this phase adds (model_name, oof_mcc,
-fold_metrics, created_at_utc, training_rows, data_fingerprint).
+Checks that a model artifact dict has the shape every consumer of a trained model in this
+repo expects (``{"models": [[...]], "feature_cols": [...], "threshold": ...}``, the same
+shape scripts/generate_submission.py and src/inference/payload.py load and ensemble over)
+plus the richer provenance fields this phase adds (model_name, oof_mcc, fold_metrics,
+created_at_utc, training_rows, data_fingerprint).
 
 Runs two checks, neither of which requires the full data pipeline or any
 unlabeled test data:
 1. A self-test that drives the REAL train_lightgbm_oof + build_model_payload
    code on a tiny synthetic labeled dataset, then round-trips the resulting
    payload through joblib.dump -> joblib.load, the same write/read pair used
-   by train_*.py and BoschPredictor.load/TwoStagePredictor.load. (Earlier in
-   this phase, BoschPredictor/TwoStagePredictor used plain pickle.load, which
-   this same self-test caught failing on any payload containing a fitted
-   LightGBM model -- joblib.dump's container format for objects holding numpy
-   arrays is not plain-pickle-readable. That is why both loaders were changed
-   to joblib.load; see src/inference/predictor.py and two_stage_predictor.py.)
+   by train_*.py and src/inference/payload.py's load_validated_payload. (This
+   pairing matters because joblib.dump's container format for objects holding
+   numpy arrays -- e.g. a fitted LightGBM model -- is not plain-pickle-readable;
+   a payload must be written and read with the same library.)
 2. A best-effort, non-fatal check of whatever is currently in models/*.pkl.
 
-KNOWN GAP (documented here, not fixed in this phase): this script does NOT
-instantiate BoschPredictor.load() end-to-end. BoschPredictor requires a fitted
-FeaturePipeline backed by data/features/selected_features_top150.txt,
-selected_categorical_top100.txt, and train_selected.parquet, none of which are
-present in this repo snapshot -- and the active feature builders
-(build_dataset_baseline.py / build_dataset_g.py / build_dataset_h.py) produce a
-different, smaller feature set than FeaturePipeline emits. Reconciling that
-mismatch is a separate, later effort (see CLAUDE.md "Two distinct inference code
-paths"). This script validates the part of the contract that IS achievable
-today: payload structure and joblib.dump<->joblib.load loadability.
+This script validates the part of the contract that is exercised end-to-end by the
+committed pipeline: payload structure and joblib.dump<->joblib.load loadability. (A prior,
+now-removed raw-data inference path -- BoschPredictor/TwoStagePredictor,
+src/inference/predictor.py + two_stage_predictor.py, deleted in PF2 of the portfolio master
+plan -- required a fitted FeaturePipeline backed by artifacts that were never present in
+this repo; see docs/production_readiness_audit.md for that historical finding.)
 
 dataset_h additionally needs data/features/dataset_h_lookup.json (a train-derived
 lookup artifact, gitignored/regenerable via scripts/pipeline/build_dataset_h.py -- see
@@ -243,11 +238,11 @@ def main() -> int:
                     )
 
     print(
-        "\nNOTE: BoschPredictor.load() is intentionally NOT exercised end-to-end here -- it "
-        "needs a fitted FeaturePipeline (data/features/selected_features_top150.txt, "
-        "selected_categorical_top100.txt, train_selected.parquet) that is not present in this "
-        "repo, and the active feature builders emit a different, smaller feature set than "
-        "FeaturePipeline does. See this script's module docstring and CLAUDE.md for details."
+        "\nNOTE: this script validates payload structure and joblib round-trip loadability "
+        "only. The raw-data inference path this repo once carried (BoschPredictor / "
+        "TwoStagePredictor) was removed in PF2 of the portfolio master plan -- it required a "
+        "fitted FeaturePipeline backed by artifacts never present in this repo. See this "
+        "script's module docstring for details."
     )
 
     return 0 if overall_ok else 1

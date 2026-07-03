@@ -69,15 +69,15 @@ def compute_dataset_h_lookup_artifacts(train_df: pd.DataFrame) -> dict:
 
     ``train_df`` must have ``Id``, ``Response``, and ``path_signature`` columns (e.g. the
     ``dataset_baseline.parquet`` + ``path_metadata.parquet`` merge already built by
-    ``scripts/build_dataset_baseline.py``). Unlike the per-fold statistics computed inside
-    ``scripts/build_dataset_h.py`` (which are intentionally restricted to each fold's
+    ``scripts/pipeline/build_dataset_baseline.py``). Unlike the per-fold statistics computed inside
+    ``scripts/pipeline/build_dataset_h.py`` (which are intentionally restricted to each fold's
     training rows to keep OOF predictions leakage-free), this fits on the FULL train set --
     correct here because the consumer is genuinely unseen test/incoming data that was never
     part of these statistics, not a held-out fold of the same rows used to fit them.
 
     The returned ``data_fingerprint`` is computed with the exact same
     ``compute_data_fingerprint`` function and ``DATASET_H_FEATURE_COLS`` that
-    ``scripts/train_dataset_h.py`` uses to fingerprint ``models/dataset_h_model.pkl`` -- since
+    ``scripts/pipeline/train_dataset_h.py`` uses to fingerprint ``models/dataset_h_model.pkl`` -- since
     both ultimately fingerprint the same underlying train rows (Id set + Response sum), a
     matching value here proves this lookup was fit from the same training run as a given model
     payload, without needing to compare full file contents. See
@@ -140,9 +140,9 @@ def apply_dataset_h_lookup(df: pd.DataFrame, lookup: dict) -> pd.DataFrame:
     ``df`` must already have the 8 baseline core columns (start_time, duration, feature_mean,
     records_last_1hr, records_last_24hr, density_ratio, chunk_id, chunk_size) plus
     ``path_signature`` -- all computable directly from raw unlabeled numeric/date columns with
-    no train dependency (see ``scripts/build_dataset_baseline.py``). No ``Response`` column is
+    no train dependency (see ``scripts/pipeline/build_dataset_baseline.py``). No ``Response`` column is
     read or required. Tokens/signatures unseen in train fall back exactly as the per-fold
-    validation-side code in ``scripts/build_dataset_h.py`` does: path_count -> 1, rate features ->
+    validation-side code in ``scripts/pipeline/build_dataset_h.py`` does: path_count -> 1, rate features ->
     ``global_mean``, pair co-occurrence -> 0.0.
     """
     global_mean = float(lookup["global_mean"])
@@ -188,22 +188,22 @@ def load_dataset_h_lookup(lookup_path) -> dict:
 
     ``lookup_path`` is a ``data/features/dataset_h_lookup.json``-shaped path. This file is
     intentionally gitignored (``data/features/*.json``) -- it is train-derived and regenerable,
-    not committed -- so it will be missing on a fresh clone until ``scripts/build_dataset_h.py``
-    has been run once. Both ``scripts/build_test_dataset_h.py`` and
-    ``scripts/validate_model_payload.py`` call this so that gap surfaces as one clear message
+    not committed -- so it will be missing on a fresh clone until ``scripts/pipeline/build_dataset_h.py``
+    has been run once. Both ``scripts/pipeline/build_test_dataset_h.py`` and
+    ``scripts/ops/validate_model_payload.py`` call this so that gap surfaces as one clear message
     in both places, not a bare ``FileNotFoundError``/``KeyError`` traceback.
     """
     path = Path(lookup_path)
     if not path.exists():
         raise FileNotFoundError(
-            f"{path} does not exist. dataset_h inference (scripts/build_test_dataset_h.py, "
+            f"{path} does not exist. dataset_h inference (scripts/pipeline/build_test_dataset_h.py, "
             f"and scripts/generate_submission.py --model-path models/dataset_h_model.pkl) "
             f"requires this train-derived lookup artifact. It is gitignored (regenerable, not "
             f"committed) -- regenerate it with: "
-            f"PYTHONPATH=. python scripts/build_dataset_baseline.py && "
-            f"PYTHONPATH=. python scripts/build_dataset_h.py "
+            f"PYTHONPATH=. python scripts/pipeline/build_dataset_baseline.py && "
+            f"PYTHONPATH=. python scripts/pipeline/build_dataset_h.py "
             f"(these need data/processed/train_numeric.parquet + train_date.parquet from "
-            f"scripts/prepare_data.py)."
+            f"scripts/pipeline/prepare_data.py)."
         )
     try:
         lookup = json.loads(path.read_text())
@@ -215,7 +215,7 @@ def load_dataset_h_lookup(lookup_path) -> dict:
         raise ValueError(
             f"{path} is missing required key(s) {sorted(missing)} -- this looks like a stale "
             f"lookup artifact from before the train-serve contract hardening. Regenerate it with "
-            f"PYTHONPATH=. python scripts/build_dataset_h.py."
+            f"PYTHONPATH=. python scripts/pipeline/build_dataset_h.py."
         )
     return lookup
 
@@ -241,7 +241,7 @@ def validate_dataset_h_lookup_compatibility(payload: dict, lookup: dict) -> list
             f"data_fingerprint mismatch: model payload has {payload_fp!r}, lookup has "
             f"{lookup_fp!r}. These were fit from different training runs and must not be used "
             f"together -- regenerate both from the same data: "
-            f"PYTHONPATH=. python scripts/build_dataset_h.py && "
-            f"PYTHONPATH=. python scripts/train_dataset_h.py"
+            f"PYTHONPATH=. python scripts/pipeline/build_dataset_h.py && "
+            f"PYTHONPATH=. python scripts/pipeline/train_dataset_h.py"
         )
     return problems

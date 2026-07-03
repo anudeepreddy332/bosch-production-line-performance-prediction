@@ -40,7 +40,7 @@ def load_monitoring_summary() -> dict | None:
 
 
 # Track 3 (label-free production batch inference): cycle/batch-partitioned output written
-# by scripts/run_production_inference.py, never containing a Response column by construction.
+# by scripts/pipeline/run_production_inference.py, never containing a Response column by construction.
 PRODUCTION_PREFIX = "predictions/"
 _PRODUCTION_KEY_RE = re.compile(r"^predictions/cycle=\d+/batch=\d+/predictions\.parquet$")
 
@@ -601,7 +601,7 @@ elif nav == "Production Monitoring (Track 3)":
     st.subheader("Production Monitoring (Track 3)")
     st.info(
         "Label-free view of real, unlabeled Track 3 batch inference output "
-        "(scripts/run_production_inference.py), read directly from "
+        "(scripts/pipeline/run_production_inference.py), read directly from "
         f"s3://{BUCKET_NAME}/{PRODUCTION_PREFIX}cycle=*/batch=*/predictions.parquet. "
         "This page never shows MCC, precision, recall, accuracy, or a confusion matrix -- "
         "production batches are unlabeled by construction."
@@ -612,7 +612,7 @@ elif nav == "Production Monitoring (Track 3)":
     mon = load_monitoring_summary()
     if mon is None:
         st.warning(
-            "No monitoring output found. Run `scripts/run_drift_monitoring.py` to generate "
+            "No monitoring output found. Run `scripts/pipeline/run_drift_monitoring.py` to generate "
             f"`outputs/monitoring/evidently_summary.json`."
         )
     else:
@@ -671,7 +671,7 @@ elif nav == "Production Monitoring (Track 3)":
     if prod_df.empty:
         st.warning(
             f"No production batches found yet under s3://{BUCKET_NAME}/{PRODUCTION_PREFIX}"
-            "cycle=*/batch=*/predictions.parquet. Run scripts/run_production_inference.py "
+            "cycle=*/batch=*/predictions.parquet. Run scripts/pipeline/run_production_inference.py "
             "to generate the first batch."
         )
     else:

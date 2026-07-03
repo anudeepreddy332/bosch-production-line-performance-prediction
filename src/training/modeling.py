@@ -180,10 +180,11 @@ def build_model_payload(
     """Assemble the on-disk model artifact from train_lightgbm_oof's output.
 
     `models` is nested as one list per CV fold (`[[fold_0_model], [fold_1_model], ...]`)
-    to match the {fold: [inner-ensemble models]} shape `BoschPredictor`/`TwoStagePredictor`
-    already iterate over (`for fold_models in self.models: for model in fold_models: ...`);
-    each fold here holds exactly one model since this phase serves a CV-fold ensemble,
-    not a per-fold multi-seed ensemble or a single full-data refit.
+    to match the {fold: [inner-ensemble models]} shape every consumer of this payload
+    iterates over (`for fold_models in payload["models"]: for model in fold_models: ...`,
+    see src/inference/payload.py::predict_proba_ensemble); each fold here holds exactly one
+    model since this phase serves a CV-fold ensemble, not a per-fold multi-seed ensemble or
+    a single full-data refit.
     """
     fold_metrics = list(result["fold_metrics"])
     return {
