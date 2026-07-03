@@ -69,8 +69,10 @@ separately, so that neither number can be mistaken for the other. See [Results](
   (`src/inference/decision_engine.py`).
 - **Known limitation:** static threshold; a rolling-origin evaluation shows deployed MCC ranges
   0.06–0.18 across 5 out-of-time folds, not a single number — see [Track 1](track1.md#results-honest-with-caveats).
-- **Persistence:** `models/dataset_h_model.pkl` (raw `LGBMClassifier`, joblib-dumped), committed
-  to git despite `models/*.pkl` being gitignored (intentionally force-added).
+- **Persistence:** `models/dataset_h_model.pkl` (raw `LGBMClassifier`, joblib-dumped). Distributed
+  via GitHub Releases as of `v1.0.0` (`gh release download v1.0.0 --dir models --pattern '*.pkl'`)
+  rather than tracked in git — see [Data Card](data_card.md#model-artifact-distribution) and
+  `CHANGELOG.md` for why.
 
 ## Kaggle model: `P1`
 
