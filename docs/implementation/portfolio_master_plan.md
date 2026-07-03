@@ -450,7 +450,11 @@ Intake rule (frozen): anything discovered during implementation that is not a co
 appended here with one line (date, phase discovered, description) and is **not** acted on before
 PF8. Correctness bugs are fixed in the phase that finds them and noted in that phase's section.
 
-- (empty)
+- 2026-07-03, PF2: `scripts/research/train_e4_ranking_stability.py` imports `matplotlib`, which is
+  not listed in `requirements.txt` (pre-existing gap, predates PF2's scripts/ regroup — confirmed
+  the script already required it and the manifest already lacked it before this phase touched the
+  file). Add `matplotlib` to `requirements.txt` whenever this script's dependencies are next
+  audited.
 
 ## 12. Ledger protocol
 
