@@ -248,7 +248,7 @@ much of this competition's famous ~0.50-MCC public leaderboard ceiling comes fro
 are Kaggle-legal but not deployable — record-adjacency leakage, duplicate/identity signature
 lookups, and eventually just far more raw signal plus model capacity than a production feature
 contract would carry. Nine experiments, six pre-registered hypothesis classifications, all
-confident, none inconclusive. Canonical numbers: [`results/leaderboard.json`](../results/leaderboard.json).
+confident, none inconclusive. Canonical numbers: [`results/leaderboard.json`](https://github.com/anudeepreddy332/bosch-production-line-defect-analysis/blob/main/results/leaderboard.json).
 
 | Experiment | Mechanism | Private LB MCC |
 |---|---|---|
@@ -262,7 +262,7 @@ The track is now **frozen** (KDR-009, tag `track2-frozen`): the original ~0.52 t
 defended by the evidence gathered, and the revised realistic forward estimate is ~0.435–0.445 via
 further tuning/blending, not further leakage engineering. Full attribution, the complete 9-row
 ladder, and the postmortem are in `docs/research/kaggle_decisions.md` (KDR-009) and summarized in
-the [README](../README.md#results).
+the [README](https://github.com/anudeepreddy332/bosch-production-line-defect-analysis#results).
 
 ---
 

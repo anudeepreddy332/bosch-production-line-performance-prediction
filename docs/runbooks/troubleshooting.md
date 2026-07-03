@@ -1,5 +1,7 @@
 # Troubleshooting
 
+> **Track:** All · **Status:** Verified
+
 Symptom → cause → fix, for the most common failures across this project. Cross-references point
 to the runbook with full detail.
 

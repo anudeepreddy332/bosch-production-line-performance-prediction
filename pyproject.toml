@@ -18,6 +18,12 @@ dev = [
     "ruff>=0.6,<1",
     "httpx>=0.27,<1",  # required by fastapi.testclient.TestClient
 ]
+# PF5 (docs/implementation/portfolio_master_plan.md): MkDocs Material docs site build,
+# invoked only in CI/local docs builds, never by the app or training/production pipelines.
+docs = [
+    "mkdocs>=1.6,<2",
+    "mkdocs-material>=9.5,<10",
+]
 
 [tool.setuptools.packages.find]
 include = ["src*", "scripts*", "apps*"]

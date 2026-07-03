@@ -1,0 +1,86 @@
+site_name: Bosch Production Line Performance
+site_description: >-
+  A production-style ML decision system for manufacturing failure detection, plus a fully
+  quarantined Kaggle leaderboard research track. Docs site companion to the recruiter dashboard
+  at bosch.themachinist.org.
+repo_url: https://github.com/anudeepreddy332/bosch-production-line-defect-analysis
+repo_name: anudeepreddy332/bosch-production-line-defect-analysis
+edit_uri: edit/main/docs/
+docs_dir: docs
+site_dir: site
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: teal
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: teal
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.top
+    - toc.follow
+    - content.action.edit
+
+markdown_extensions:
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+# Pre-existing repo docs intentionally reachable from README/SYSTEM_OVERVIEW/case-study links but
+# not duplicated into this curated nav (PF5 risk note: "curate; link into the log, never
+# restructure it"). Still built and browsable at their path; just not in the left nav.
+not_in_nav: |
+  agent_memory/*
+  kaggle_submission.md
+  dataset_h_submission_run.md
+  evaluation_feature_quality_audit.md
+  full_scale_training_plan.md
+  production_readiness_audit.md
+  reproducible_metrics_report.md
+  research/git_workflow.md
+  research/decisions.md
+  research/kaggle_decisions.md
+  ml_system_tracks.md
+  implementation/portfolio_master_plan.md
+
+nav:
+  - Home: index.md
+  - Results: results.md
+  - Architecture: architecture.md
+  - Tracks:
+      - Track 1 — Offline Training + Evaluation: track1.md
+      - Track 2 — Kaggle Research (frozen): track2.md
+      - Track 3 — Production Inference: track3.md
+  - Research Log:
+      - Overview: research/README.md
+      - Research Summary (postmortem): RESEARCH_SUMMARY.md
+  - Runbooks:
+      - Overview: runbooks/README.md
+      - Local setup: runbooks/local_setup.md
+      - Track 1 — Offline evaluation: runbooks/track1_offline_evaluation.md
+      - Track 2 — Kaggle submission: runbooks/track2_kaggle_submission.md
+      - Track 3 — Production inference: runbooks/track3_production_inference.md
+      - Dashboard: runbooks/dashboard.md
+      - Docker: runbooks/docker.md
+      - AWS S3: runbooks/aws_s3.md
+      - EC2 deployment: runbooks/ec2_deployment.md
+      - Troubleshooting: runbooks/troubleshooting.md
+  - Model & Data Cards:
+      - Model Card: model_card.md
+      - Data Card: data_card.md
+  - Case Study: CASE_STUDY_BOSCH_PRODUCTION_SYSTEM.md
+  - Decisions:
+      - "ADR: files+git over MLflow": decisions/adr-experiment-tracking.md

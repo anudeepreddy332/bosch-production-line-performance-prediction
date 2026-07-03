@@ -1,6 +1,8 @@
 # EC2 Deployment
 
-**Status: planned, not verified.** No EC2 instance was provisioned or tested while writing this
+> **Track:** All · **Status:** Planned, not verified
+
+No EC2 instance was provisioned or tested while writing this
 runbook. Every command below is derived from the verified local/Docker behavior documented in the
 other runbooks ([`local_setup.md`](local_setup.md), [`docker.md`](docker.md),
 [`aws_s3.md`](aws_s3.md)) — treat it as "should work" guidance, not a confirmed procedure. Where a

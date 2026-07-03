@@ -1,14 +1,24 @@
 # Dashboard
 
+> **Track:** 1 (View B) + 3 (View A) · **Status:** Verified
+
 ## Running Streamlit locally
 
 ```bash
 streamlit run apps/streamlit_dashboard/app.py
 ```
 
-Opens at `http://localhost:8501`. The dashboard requires S3 access for **every** page (both
-views load data from S3, not local disk) — see "What S3 data this dashboard expects" below before
-running it.
+Opens at `http://localhost:8501`. `DATA_SOURCE` (env var, default `local`) picks the data source:
+
+- **`local` (default, credential-free):** both views read directly from disk —
+  `data/features/{meta_dataset,oof_predictions_final}.parquet` for View B, `outputs/production/*/
+  cycle=*/batch=*/predictions.parquet` for View A. `src.utils.s3_utils` (which builds a boto3
+  client at import time) is never imported in this mode, so no AWS credentials are required.
+- **`s3`:** both views read the same files from the bucket named by `AWS_BUCKET_NAME` in `.env` —
+  see "What S3 data this dashboard expects" below and [`aws_s3.md`](aws_s3.md).
+
+Set `DATA_SOURCE=s3` in `.env` (or the shell environment) to switch modes; everything below that
+references "S3" applies only when running in that mode.
 
 ## View A: Production Monitoring (Track 3)
 
