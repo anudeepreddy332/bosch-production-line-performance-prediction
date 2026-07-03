@@ -231,7 +231,7 @@ PF8 remains an elective backlog thereafter.
 
 ### PF2 — Code hygiene
 
-**Status: NOT STARTED**
+**Status: IN PROGRESS**
 
 - **Objective:** every file a reviewer opens works, builds, and belongs; one dependency source of
   truth; dashboard runs credential-free.
