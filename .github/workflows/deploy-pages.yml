@@ -85,11 +85,27 @@ jobs:
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-        run: npx --yes netlify-cli@17 deploy --dir=dist --prod --message="$GITHUB_SHA" | tee "$GITHUB_STEP_SUMMARY"
+        run: |
+          set -euo pipefail
+          if [ -z "${NETLIFY_AUTH_TOKEN:-}" ] || [ -z "${NETLIFY_SITE_ID:-}" ]; then
+            echo "::error::NETLIFY_AUTH_TOKEN and/or NETLIFY_SITE_ID repo secrets are not set -- see the comment at the top of this workflow file for setup steps. Failing fast instead of letting netlify-cli fall back to an interactive OAuth login that would time out after 5 minutes."
+            exit 1
+          fi
+          output=$(npx --yes netlify-cli@17 deploy --dir=dist --prod --message="$GITHUB_SHA")
+          echo "$output"
+          echo "$output" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Deploy to Netlify (preview, PRs from this repo only)
         if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-        run: npx --yes netlify-cli@17 deploy --dir=dist --message="PR-${{ github.event.pull_request.number }}" | tee "$GITHUB_STEP_SUMMARY"
+        run: |
+          set -euo pipefail
+          if [ -z "${NETLIFY_AUTH_TOKEN:-}" ] || [ -z "${NETLIFY_SITE_ID:-}" ]; then
+            echo "::error::NETLIFY_AUTH_TOKEN and/or NETLIFY_SITE_ID repo secrets are not set -- see the comment at the top of this workflow file for setup steps. Failing fast instead of letting netlify-cli fall back to an interactive OAuth login that would time out after 5 minutes."
+            exit 1
+          fi
+          output=$(npx --yes netlify-cli@17 deploy --dir=dist --message="PR-${{ github.event.pull_request.number }}")
+          echo "$output"
+          echo "$output" >> "$GITHUB_STEP_SUMMARY"
