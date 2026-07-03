@@ -1,12 +1,16 @@
 # Keeps the Docker build context small. Without this file, `docker build`/`docker compose
-# build` sends the entire repo (~17GB, mostly data/raw) to the daemon before any build step
-# runs. None of the excluded paths below are needed inside the API or dashboard images --
-# both services read data/outputs via the docker-compose volume mounts (./data:/app/data,
-# ./outputs:/app/outputs) at runtime, not from what COPY . /app bakes into the image.
+# build` sends the entire repo (~7GB+, mostly data/ and outputs/) to the daemon before any build
+# step runs. None of the excluded paths below are needed inside the API or dashboard images --
+# in local dev, docker-compose.override.yml bind-mounts ./data and ./outputs over the image at
+# runtime (restoring the previous default `docker compose up` behavior); the production-lean
+# base docker-compose.yml has no such mounts and doesn't need this data to build or boot (see
+# apps/api/main.py's graceful fallback when outputs/max_recall_system_summary.json is absent).
 
 .git
+.github
 data/raw
 data/processed
+data/features
 .env
 .claude
 
@@ -18,3 +22,14 @@ __pycache__
 venv
 *.egg-info
 .pytest_cache
+.ruff_cache
+
+# Generated/large artifacts and pickled models -- neither service loads models/*.pkl directly
+# (API works on precomputed scores; dashboard reads OOF/prediction parquets, not model files).
+outputs/
+models/
+
+# Documentation and research artifacts -- not read by either service at runtime.
+docs/
+results/
+*.md

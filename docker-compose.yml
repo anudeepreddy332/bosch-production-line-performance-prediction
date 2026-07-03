@@ -9,10 +9,19 @@ services:
     environment:
       - PYTHONPATH=/app
       - BOSCH_PROJECT_ROOT=/app
-    volumes:
-      - ./:/app
-      - ./data:/app/data
-      - ./outputs:/app/outputs
+    # Optional: loads AWS_ACCESS_KEY/AWS_SECRET_KEY/AWS_REGION/AWS_BUCKET_NAME if the API ever
+    # needs them (it doesn't today -- it only reads outputs/max_recall_system_summary.json, with
+    # a graceful in-code fallback if that file is absent). Kept for parity with the dashboard
+    # service and so both services read config from the same one source of truth.
+    env_file:
+      - path: .env
+        required: false
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
 
   dashboard:
     build:
@@ -24,17 +33,29 @@ services:
     environment:
       - PYTHONPATH=/app
       - BOSCH_PROJECT_ROOT=/app
+      # local (default): read data/features + outputs/production directly, no AWS credentials
+      # required. s3: read from the S3 bucket named in .env (AWS_BUCKET_NAME) -- see
+      # docs/runbooks/aws_s3.md and docs/runbooks/ec2_deployment.md.
+      - DATA_SOURCE=${DATA_SOURCE:-local}
     # Optional: loads AWS_ACCESS_KEY/AWS_SECRET_KEY/AWS_REGION/AWS_BUCKET_NAME (the same
-    # names src/utils/s3_utils.py reads) from a local .env, which the dashboard now also
-    # depends on since it imports its S3 client from that module. `required: false` means
-    # `up` still works with no .env present (e.g. on an EC2 instance using an IAM role) --
-    # see docs/runbooks/aws_s3.md and docs/runbooks/ec2_deployment.md.
+    # names src/utils/s3_utils.py reads) from a local .env, needed only when DATA_SOURCE=s3.
+    # `required: false` means `up` still works with no .env present (e.g. local DATA_SOURCE=local
+    # dev, or an EC2 instance using an IAM role) -- see docs/runbooks/aws_s3.md and
+    # docs/runbooks/ec2_deployment.md.
     env_file:
       - path: .env
         required: false
-    volumes:
-      - ./:/app
-      - ./data:/app/data
-      - ./outputs:/app/outputs
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8501/_stcore/health', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
     depends_on:
-      - api
+      api:
+        condition: service_healthy
+
+# Local development restores the previous full-repo bind mounts automatically via
+# docker-compose.override.yml (Compose merges it in by default for `docker compose up`).
+# This base file alone describes the production-lean, image-only shape of each service
+# (what PF3's CI docker-build step and any future production deploy build from).
