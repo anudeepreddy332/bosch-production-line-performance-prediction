@@ -3,6 +3,9 @@
 One page, every major artifact in this repository linked from here. If you only read one document
 before digging into code, read this one (or the [README](README.md) first, for the results).
 
+**Live:** [dashboard](https://bosch.themachinist.org) · [docs site](https://bosch.themachinist.org/docs/) ·
+[`v1.0.0` release](https://github.com/anudeepreddy332/bosch-production-line-defect-analysis/releases/tag/v1.0.0)
+
 ## The shape of the project
 
 Three ML tracks, kept structurally separate, plus a fourth non-ML track (this repository's own
@@ -29,7 +32,7 @@ flowchart LR
 | **Track 1** — Offline Training + Evaluation | Frozen (`track1-frozen`) | [`docs/research/decisions.md`](docs/research/decisions.md) (DR-001–DR-015) | `scripts/pipeline/train_dataset_h.py`, `src/evaluation/decision_system.py` |
 | **Track 2** — Kaggle Research | Frozen (`track2-frozen`, KDR-009) | [`docs/research/kaggle_decisions.md`](docs/research/kaggle_decisions.md) (KDR-001–KDR-009) | `results/leaderboard.json`, `src/kaggle/`, `scripts/kaggle/` |
 | **Track 3** — Production Inference | Frozen (`track3-frozen`) | [`docs/research/decisions.md`](docs/research/decisions.md) (DR-011–DR-015 for RP2) | `scripts/pipeline/run_production_inference.py`, `scripts/pipeline/run_drift_monitoring.py` |
-| **Portfolio Engineering** — this repo's own transition | Active (PF1) | [`docs/implementation/portfolio_master_plan.md`](docs/implementation/portfolio_master_plan.md) | the master plan itself |
+| **Portfolio Engineering** — this repo's own transition | PF0–PF6 complete; PF8 under review; PF7 optional | [`docs/implementation/portfolio_master_plan.md`](docs/implementation/portfolio_master_plan.md) | the master plan itself |
 
 Why three ML tracks and not one "production" bucket: `docs/ml_system_tracks.md` (the canonical
 statement of this split, and its own audit of where the code did/didn't match it at each point in
@@ -48,24 +51,63 @@ time).
 
 ## Architecture
 
-- [`docs/architecture.md`](docs/architecture.md) — Track 1 / Track 3 Mermaid data-flow diagrams,
-  runtime component table, entrypoints, deployability notes. (Reproduced in the README too.)
-- Track 2 has no equivalent diagram yet (`src/kaggle/` + `scripts/kaggle/`, quarantined behind a
-  firewall grep so nothing outside those two trees can import them) — queued in the master plan.
+- [`docs/architecture.md`](docs/architecture.md) — Track 1 / Track 2 / Track 3 Mermaid data-flow
+  diagrams, runtime component table, entrypoints, deployability notes. (Track 1/3 reproduced in
+  the README too.)
+- See "The production pipeline, end to end" below for an index-level walkthrough of Track 1 + 3.
+
+## The production pipeline, end to end
+
+Seven stages, raw data to a monitored decision — index-level only; diagrams and the full
+component table live in [`docs/architecture.md`](docs/architecture.md).
+
+1. **Raw Bosch manufacturing data.** `scripts/pipeline/prepare_data.py` converts the raw Kaggle
+   CSVs (numeric/date/categorical, train + test) into chunked Parquet, recording provenance in
+   `data/processed/PROVENANCE.json`.
+2. **Feature engineering.** `scripts/pipeline/build_dataset_{baseline,g,h}.py` derive three
+   progressively richer, leakage-safe feature sets — target-rate and path-transition features are
+   computed fold-by-fold from training-fold statistics only, never from the full dataset at once.
+3. **Model training.** `scripts/pipeline/train_{baseline,dataset_g,dataset_h}.py` each train a
+   LightGBM model via chunk-aware `StratifiedGroupKFold` CV; `train_meta_model.py` stacks the
+   three OOF predictions into a final model.
+4. **Rolling-origin validation (RP2).** `scripts/research/train_e3_rolling_origin.py` re-evaluates
+   the frozen `dataset_h` model across 5 forward-chaining time windows (train on the past, score
+   the future) — this is what produces the headline **deployable MCC 0.06–0.18** range in
+   [Results](#results) above, a different number from step 3's single chunk-aware OOF score.
+5. **Decision engine / threshold policy.** `src/evaluation/decision_system.py` sweeps
+   thresholds/inspection budgets against a cost model (`CostConfig`, default: a missed failure
+   costs 20× a false alarm) to pick an operating point; `src/inference/decision_engine.py`'s
+   `DecisionPolicy` is the runtime object (threshold + budget) both the API and batch scorer apply.
+6. **Deployment.** `apps/api/main.py` serves `DecisionPolicy` over precomputed scores
+   (`/predict`, `/batch_predict`); `scripts/pipeline/run_production_inference.py` applies the same
+   policy to label-free unlabeled batches, append-only partitioned output. Both the decision
+   summary and the production/monitoring steps below are orchestrated by
+   `scripts/pipeline/run_full_system.py` (`build_decision_summary.py` →
+   `run_production_inference.py` → `run_drift_monitoring.py`).
+7. **Monitoring and drift detection.** `scripts/pipeline/run_drift_monitoring.py` reads only the
+   label-free production batches and runs Evidently drift detection on the single `risk_score`
+   column, writing `outputs/monitoring/evidently_summary.json` + HTML — rendered in the internal
+   dashboard's Production Monitoring view.
 
 ## Dashboard
 
-`apps/streamlit_dashboard/app.py` — two views (Production Monitoring / Track 3, Offline Evaluation
-/ Track 1), currently reading from S3. A static, credential-free, recruiter-facing dashboard is
-specified and queued in the [master plan](docs/implementation/portfolio_master_plan.md) (PF4).
+**Recruiter dashboard (live, primary):** [bosch.themachinist.org](https://bosch.themachinist.org) —
+Story / Decision Explorer / Model Internals / Governance & Reproducibility, built from
+[`dashboard/`](dashboard/) (Vite + React + TypeScript), static and credential-free, deployed via
+[`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml).
+
+**Internal operator dashboard:** `apps/streamlit_dashboard/app.py` — the same two views (Production
+Monitoring / Track 3, Offline Evaluation / Track 1) this document described before the recruiter
+dashboard shipped; `DATA_SOURCE=local` by default (credential-free) or `s3`.
 
 ## Deployment
 
-- `Dockerfile.api` + `Dockerfile.dashboard` + `docker-compose.yml` — both services, dev-oriented
-  today; hardening queued in the master plan (PF2).
+- `Dockerfile.api` + `Dockerfile.dashboard` + `docker-compose.yml` — both services, hardened in
+  PF2 (non-root users, healthchecks, `.dockerignore`).
 - `apps/api/main.py` — FastAPI service over precomputed scores (`/health`, `/predict`,
   `/batch_predict`), policy from `outputs/max_recall_system_summary.json`.
-- Hosting plan for a live, always-on deployment: master plan PF4/PF7.
+- The recruiter dashboard is live and hosted (PF4); an always-on VPS tier for the API
+  (`api.`/`console.` subdomains) is optional and not started — master plan PF7.
 
 ## Research
 
@@ -87,10 +129,13 @@ system, not the modeling internals.
 ## Reproducibility & data provenance
 
 - [`data/README.md`](data/README.md) — which committed artifacts are reproducible from code today
-  ("World A", a 50k-row dev sample) vs. preserved-but-not-regenerable historical artifacts
-  ("World B").
+  vs. preserved-but-not-regenerable historical artifacts ("World B"). The models currently on disk
+  were trained on the full-scale run (1,183,747 rows, confirmed in
+  `data/processed/PROVENANCE.json`), not the smaller dev sample `docs/reproducible_metrics_report.md`
+  §1 still describes as current — that doc is due a refresh (tracked in the master plan's PF8
+  backlog).
 - [`docs/reproducible_metrics_report.md`](docs/reproducible_metrics_report.md) — exact numbers and
-  regeneration commands for both.
+  regeneration commands.
 - `data/processed/PROVENANCE.json` — the one data-provenance file tracked in git despite
   `data/processed/` otherwise being gitignored.
 

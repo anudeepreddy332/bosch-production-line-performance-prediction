@@ -23,12 +23,17 @@ same dataset's competition leaderboard from 0.162 to **0.419 private MCC**, enti
 mechanisms this project's own charter excludes from production.
 
 **Dashboard:** an interactive recruiter-facing dashboard — Story / Decision Explorer / Model
-Internals / Governance & Reproducibility — lives in [`dashboard/`](dashboard/) and deploys via
-[`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml) to Netlify at
-`bosch.themachinist.org` (live link goes here once DNS is attached, post-CP4). Every number it
-shows is exported straight from committed pipeline artifacts by
+Internals / Governance & Reproducibility — is live at **[bosch.themachinist.org](https://bosch.themachinist.org)**,
+built from [`dashboard/`](dashboard/) and deployed via
+[`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml). Every number it shows
+is exported straight from committed pipeline artifacts by
 [`scripts/ops/export_dashboard_data.py`](scripts/ops/export_dashboard_data.py) — nothing hand-typed.
 Run it locally: `cd dashboard && npm ci && npm run dev`.
+
+**Also live:** the full documentation site at [bosch.themachinist.org/docs/](https://bosch.themachinist.org/docs/)
+(architecture, model & data cards, research summary, runbooks) and the
+[`v1.0.0` release](https://github.com/anudeepreddy332/bosch-production-line-defect-analysis/releases/tag/v1.0.0)
+(see [`CHANGELOG.md`](CHANGELOG.md)).
 
 <img src="docs/assets/dashboard_story_page.png" width="700" alt="Dashboard Story page: headline honest MCC range, per-window rolling-origin table, and system summary"><br>
 <img src="docs/assets/dashboard_decision_explorer.png" width="700" alt="Dashboard Decision Explorer page: live threshold slider, cost model, and PR/ROC curves for all four models">
@@ -209,7 +214,10 @@ Docker, S3, and EC2 deployment live in [`docs/runbooks/`](docs/runbooks/README.m
 
 ---
 
-## Dashboard
+## Internal operator dashboard
+
+Separate from the public recruiter dashboard linked above, `apps/streamlit_dashboard/app.py` is a
+credentialed Streamlit tool for local/S3-connected operation, with two views over the same data:
 
 **View A — Production Monitoring (Track 3, label-free):** batch/cycle progress, risk-score
 distribution, auto-reject/manual-inspect counts, Evidently score-distribution drift (KS test on
@@ -218,17 +226,18 @@ distribution, auto-reject/manual-inspect counts, Evidently score-distribution dr
 **View B — Offline Evaluation / Decision Analysis (Track 1, labeled OOF):** threshold tuning,
 inspection-budget simulation, recall/precision trade-offs, cost optimization, failure analysis.
 
-Today this is a Streamlit app that reads from S3 (`apps/streamlit_dashboard/app.py`) — see the
-[master plan](docs/implementation/portfolio_master_plan.md) (PF4) for the static, credential-free,
-recruiter-facing dashboard planned on top of the same data.
+Run locally: `streamlit run apps/streamlit_dashboard/app.py` (`DATA_SOURCE=local` by default,
+credential-free; set `DATA_SOURCE=s3` for the S3-backed mode — see
+[`docs/runbooks/dashboard.md`](docs/runbooks/dashboard.md)).
 
 ---
 
 ## Tech stack
 
 Python, pandas, LightGBM · Chunk-aware `StratifiedGroupKFold` CV (`src/training/cv.py`) · FastAPI
-(serving) · Streamlit (dashboard) · Evidently (drift monitoring) · Docker (`Dockerfile.api`,
-`Dockerfile.dashboard`, `docker-compose.yml`) · S3 (append-only prediction partitions).
+(serving) · Vite + React + TypeScript (recruiter dashboard) · Streamlit (internal operator
+dashboard) · Evidently (drift monitoring) · Docker (`Dockerfile.api`, `Dockerfile.dashboard`,
+`docker-compose.yml`) · S3 (append-only prediction partitions) · MkDocs Material (docs site).
 
 ## Governance
 
@@ -241,15 +250,17 @@ with an Evidence/Outcome/Decision record, mirroring how a real ML org would run 
 - **Track 2 (Kaggle):** [`docs/research/kaggle_decisions.md`](docs/research/kaggle_decisions.md) —
   KDR-001 through KDR-009, tag `track2-frozen`. Registry: `results/leaderboard.json`.
 - **Repository engineering:** [`docs/implementation/portfolio_master_plan.md`](docs/implementation/portfolio_master_plan.md)
-  — the currently active phase (PF1) and everything after it.
+  — phases PF0–PF6 complete (tests + CI, code hygiene, the recruiter dashboard, the docs site,
+  and the `v1.0.0` release); PF8 (dashboard presentation refinement) is under review; PF7 (an
+  always-on hosted tier) remains optional and not started.
 
-## What's next
+## Project status
 
-The Kaggle research program is frozen (KDR-009) — the roadmap from here is repository engineering,
-not further modeling, and it's tracked as a phased, checkpointed plan rather than a wishlist:
+The Kaggle research program is frozen (KDR-009). Repository engineering has since shipped a
+minimal test suite + CI, the recruiter dashboard, a documentation site, and the `v1.0.0` release —
+tracked as a phased, checkpointed plan, not a wishlist:
 [`docs/implementation/portfolio_master_plan.md`](docs/implementation/portfolio_master_plan.md).
-Concretely queued: a minimal test suite + CI, a static recruiter-facing dashboard, a documentation
-site, and a `v1.0.0` release. On the production side, the case study's own
+On the production side, the case study's own
 ["Remaining Work"](docs/CASE_STUDY_BOSCH_PRODUCTION_SYSTEM.md#12-production-readiness-status) still
 applies: periodic threshold recalibration and automated drift alerting are designed but not wired up.
 
