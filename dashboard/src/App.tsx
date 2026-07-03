@@ -59,6 +59,14 @@ export default function App() {
           <a href={`${REPO_URL}/releases/tag/v1.0.0`} target="_blank" rel="noreferrer">
             v1.0.0 release
           </a>
+          <a
+            href={`${REPO_URL}/blob/main/scripts/ops/export_dashboard_data.py`}
+            target="_blank"
+            rel="noreferrer"
+            title="Every number on this dashboard is exported directly from committed pipeline artifacts by this script — nothing here is hand-typed."
+          >
+            ⌁ traceable
+          </a>
         </span>
         <span>
           Built by Anudeep Reddy. Client-side only — no data leaves your browser.

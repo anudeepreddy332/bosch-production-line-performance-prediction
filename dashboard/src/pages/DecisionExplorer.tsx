@@ -34,7 +34,7 @@ export default function DecisionExplorer() {
     <section>
       <h1>Decision Explorer</h1>
       <p className="lede">
-        Every part gets a risk score. One dial decides which ones get pulled for inspection. Drag it.
+        Every part gets a risk score — one dial decides which ones get pulled for inspection. Drag it.
       </p>
 
       <InspectionLine

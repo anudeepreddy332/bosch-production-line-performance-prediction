@@ -233,39 +233,6 @@ p {
   max-width: 26ch;
 }
 
-.hero-contrast {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: stretch;
-  gap: 0;
-  margin: 1.75rem 0 0.75rem;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  overflow: hidden;
-}
-
-.hero-contrast-cell {
-  padding: 1.4rem 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-
-.hero-contrast-divider {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 1rem;
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--color-text-muted);
-  border-left: 1px solid var(--color-border);
-  border-right: 1px solid var(--color-border);
-  background: var(--color-bg);
-}
-
 .big-number {
   font-size: 2.4rem;
   font-weight: 800;
@@ -523,16 +490,6 @@ th {
   border-color: var(--color-primary);
 }
 
-.slider-block {
-  flex: 1;
-  min-width: 240px;
-}
-
-.slider-block input[type="range"] {
-  width: 100%;
-  accent-color: var(--color-accent-strong);
-}
-
 /* ---------- Callouts / notes ---------- */
 
 .note {
@@ -567,120 +524,6 @@ th {
 
 .callout p {
   margin: 0.25rem 0;
-}
-
-/* ---------- Comparison block ---------- */
-
-.compare-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 1rem;
-  margin: 1rem 0;
-}
-
-.compare-card h3 {
-  margin-top: 0;
-}
-
-ul.consequences {
-  list-style: none;
-  padding: 0;
-  margin: 0.5rem 0 0;
-  line-height: 1.7;
-  font-size: 0.92rem;
-}
-
-ul.consequences li {
-  padding-left: 1.5rem;
-  position: relative;
-}
-
-ul.consequences li.good::before {
-  content: "✓";
-  position: absolute;
-  left: 0;
-  color: var(--color-accent-strong);
-  font-weight: 700;
-}
-
-ul.consequences li.bad::before {
-  content: "✗";
-  position: absolute;
-  left: 0;
-  color: var(--color-danger);
-  font-weight: 700;
-}
-
-/* ---------- Timeline ---------- */
-
-.timeline {
-  list-style: none;
-  margin: 1.25rem 0;
-  padding: 0;
-  position: relative;
-}
-
-.timeline::before {
-  content: "";
-  position: absolute;
-  left: 0.55rem;
-  top: 0.4rem;
-  bottom: 0.4rem;
-  width: 2px;
-  background: var(--color-border);
-}
-
-.timeline li {
-  position: relative;
-  padding: 0 0 1.1rem 2.1rem;
-}
-
-.timeline li:last-child {
-  padding-bottom: 0;
-}
-
-.timeline-dot {
-  position: absolute;
-  left: 0;
-  top: 0.28rem;
-  width: 1.15rem;
-  height: 1.15rem;
-  border-radius: 50%;
-  background: var(--color-surface);
-  border: 3px solid var(--color-accent);
-}
-
-.timeline li.contaminated .timeline-dot {
-  border-color: #d9a0a0;
-}
-
-.timeline li.milestone .timeline-dot {
-  border-color: var(--color-primary);
-  background: var(--color-primary);
-}
-
-.timeline-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.5rem;
-}
-
-.timeline-id {
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-.timeline-mcc {
-  font-variant-numeric: tabular-nums;
-  font-weight: 600;
-  color: var(--color-primary);
-}
-
-.timeline-desc {
-  font-size: 0.9rem;
-  color: var(--color-text-muted);
-  margin: 0.15rem 0 0;
 }
 
 /* ---------- Flow strip (architecture) ---------- */
@@ -1271,15 +1114,6 @@ a.external-link:hover {
   }
   .big-number {
     font-size: 1.7rem;
-  }
-  .hero-contrast {
-    grid-template-columns: 1fr;
-  }
-  .hero-contrast-divider {
-    border: none;
-    border-top: 1px solid var(--color-border);
-    border-bottom: 1px solid var(--color-border);
-    padding: 0.4rem;
   }
 }
 
