@@ -416,6 +416,26 @@ PF8 remains an elective backlog thereafter.
   - [ ] DNS + TLS live; production deploy comes from CI, not manual upload
 - **Git workflow:** `portfolio/PF4-dashboard` (`PF4 feat:/ci:`); PR with Pages preview URL for CP4;
   `--no-ff` merge triggers production deploy; DNS attached only after CP4 approval.
+- **Deviation, user-authorized (2026-07-03): hosting target changed from Cloudflare Pages to
+  Netlify.** The user already owns `themachinist.org` (registered at Porkbun) and already hosts on
+  Netlify Free, and asked for an evaluation of Netlify against Cloudflare before committing to new
+  infrastructure. Checked every hosting-relevant requirement in this section against Netlify Free:
+  custom domain + automatic TLS (yes), CI-triggered deploy from GitHub Actions (yes, via
+  `netlify-cli`), PR preview deployments (yes), SPA fallback via a `_redirects` file (yes, identical
+  syntax to Cloudflare Pages — the committed `dashboard/public/_redirects` needed no changes), and
+  one-site-multiple-paths for PF5's future `/docs/` mount (yes, same directory-structure trick,
+  host-agnostic). Found no requirement Netlify fails and no concrete Cloudflare advantage for a
+  single low-traffic static site — Cloudflare's main edge over Netlify here would be DNS
+  consolidation and edge network breadth, neither of which matters at this traffic scale, and
+  Cloudflare would additionally require a new account, a new Pages project, and (for most setups)
+  delegating `themachinist.org`'s nameservers, none of which Netlify requires since the user already
+  operates it. `.github/workflows/deploy-pages.yml` (filename kept as the frozen spec named it)
+  deploys via `netlify-cli` instead of `wrangler`; every other PF4 deliverable — export script, four
+  pages, bundle budget, README — is unaffected. This is a deviation from the literal "Cloudflare
+  Pages" wording in this section's Stack/Deliverables bullets above (frozen §9 text, left as
+  originally written per ledger protocol — only this deviation note and future checkpoint records
+  may be appended), not a change to those bullets themselves. Flagged for explicit confirmation at
+  CP4.
 - **Stopping point:** CP4 (preview-URL tour). **Effort: 18–28 h.**
 
 ### PF5 — Documentation site

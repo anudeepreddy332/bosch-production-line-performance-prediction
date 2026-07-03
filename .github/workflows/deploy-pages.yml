@@ -1,20 +1,33 @@
 name: deploy-pages
 
-# Builds and deploys the recruiter dashboard (dashboard/) to Cloudflare Pages.
-# Runs only when dashboard/ changes -- the Python CI (ci.yml) is unaffected and
-# vice versa. The JSON data bundle under dashboard/public/data/ is committed by
-# scripts/ops/export_dashboard_data.py (run locally, not in CI -- CI has no
-# access to the gitignored parquets it reads), so this workflow only builds
-# and ships the already-committed bundle. See docs/implementation/
-# portfolio_master_plan.md PF4 for the full spec.
+# Builds and deploys the recruiter dashboard (dashboard/) to Netlify.
 #
-# Requires two repo secrets before this workflow can succeed (user-side setup,
-# not created by this workflow): CLOUDFLARE_API_TOKEN (Pages:Edit permission)
-# and CLOUDFLARE_ACCOUNT_ID. A Cloudflare Pages project named "bosch-dashboard"
-# must exist first (`wrangler pages project create bosch-dashboard`, or via the
-# Cloudflare dashboard). Until both secrets are set, this workflow will fail at
-# the deploy step -- build/typecheck/bundle-budget checks above it still run
-# and still gate the PR.
+# PF4's frozen spec (docs/implementation/portfolio_master_plan.md) named
+# Cloudflare Pages. Deviation (2026-07-03, user-authorized, logged in PF4's
+# section): the user already owns themachinist.org (Porkbun) and already
+# hosts on Netlify Free. Evaluated Netlify against every PF4 hosting
+# requirement -- custom domain + free TLS, CI-triggered deploy, PR preview
+# deployments, SPA redirect support (_redirects, identical syntax on both
+# platforms), one-site-multiple-paths for PF5's future /docs/ mount -- and
+# found no gap and no concrete Cloudflare advantage for a single low-traffic
+# static site. Netlify reuses infrastructure the user already operates
+# (no new account, no DNS nameserver migration -- just one CNAME record at
+# Porkbun), which is the simpler production architecture. Kept this
+# workflow's filename as the frozen spec named it; only the deploy target
+# changed.
+#
+# Runs only when dashboard/ changes. The JSON data bundle under
+# dashboard/public/data/ is committed by scripts/ops/export_dashboard_data.py
+# (run locally, not in CI -- CI has no access to the gitignored parquets it
+# reads), so this workflow only builds and ships the already-committed
+# bundle.
+#
+# Requires two repo secrets before this workflow can succeed (user-side
+# setup, not created by this workflow): NETLIFY_AUTH_TOKEN (a personal
+# access token from Netlify user settings) and NETLIFY_SITE_ID (the target
+# site's API ID, from Site settings -> General -> Site details). Until both
+# secrets are set, this workflow will fail at the deploy step -- build/
+# typecheck/bundle-budget checks above it still run and still gate the PR.
 on:
   push:
     branches: [main]
@@ -67,11 +80,16 @@ jobs:
               sys.exit(1)
           EOF
 
-      - name: Deploy to Cloudflare Pages
-        if: ${{ github.event.pull_request.head.repo.full_name == github.repository || github.event_name == 'push' }}
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: dashboard
-          command: pages deploy dist --project-name=bosch-dashboard
+      - name: Deploy to Netlify (production, main only)
+        if: ${{ github.event_name == 'push' }}
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        run: npx --yes netlify-cli@17 deploy --dir=dist --prod --message="$GITHUB_SHA" | tee "$GITHUB_STEP_SUMMARY"
+
+      - name: Deploy to Netlify (preview, PRs from this repo only)
+        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        run: npx --yes netlify-cli@17 deploy --dir=dist --message="PR #${{ github.event.pull_request.number }}" | tee "$GITHUB_STEP_SUMMARY"
