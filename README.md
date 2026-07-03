@@ -136,7 +136,8 @@ boundary are in [`SYSTEM_OVERVIEW.md`](SYSTEM_OVERVIEW.md) and
 
 ```bash
 # Environment
-conda env create -f environment.yml      # or: pip install -r requirements.txt
+python -m venv .venv && source .venv/bin/activate   # or your preferred env manager
+pip install -r requirements.txt
 
 # Training pipeline (run in order; each step reads parquet outputs of the previous one)
 python scripts/prepare_data.py --zip-path ~/Downloads/bosch-production-line-performance.zip

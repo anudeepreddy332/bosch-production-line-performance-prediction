@@ -17,7 +17,7 @@ and what's still unverified (a real EC2 instance, specifically).
   Bosch CSVs are several GB each, so provision disk accordingly (50+ GB) if you intend to
   regenerate `data/processed/*` from `data/raw/` rather than relying on already-committed
   artifacts.
-- Python 3.11 (matches `environment.yml`), git.
+- Python 3.11, git.
 
 ## Cloning the repo
 
@@ -67,15 +67,11 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-or via conda if you have it installed:
+(`environment.yml` was removed in PF2 of the portfolio master plan — `requirements.txt` is now the
+single, pinned dependency source for both local setup and Docker.)
 
-```bash
-conda env create -f environment.yml
-conda activate bosch
-```
-
-`boto3` is included in both `requirements.txt` and `environment.yml` as of the Docker/S3
-hardening phase — no separate install step needed.
+`boto3` is included in `requirements.txt` as of the Docker/S3 hardening phase — no separate
+install step needed.
 
 ## Running batch inference
 
@@ -145,7 +141,7 @@ written and tested against this specific bucket's actual usage on this branch.
 
 | Step | Status |
 |---|---|
-| Local Python env setup (`boto3` included in `requirements.txt`/`environment.yml`) | Verified (see [`local_setup.md`](local_setup.md)) |
+| Local Python env setup (`boto3` included in `requirements.txt`) | Verified (see [`local_setup.md`](local_setup.md)) |
 | `scripts/run_production_inference.py` batch scoring, append-only S3 upload | Verified locally (see [`track3_production_inference.md`](track3_production_inference.md)) |
 | FastAPI `/health`/`/predict`/`/batch_predict` | Verified locally, not specifically on EC2 |
 | Streamlit dashboard, both views | Verified locally, not specifically on EC2 |

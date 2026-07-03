@@ -6,21 +6,17 @@ variables, and sanity checks. Everything below was verified against the current 
 
 ## 1. Python environment
 
-Two equivalent options:
-
 ```bash
-conda env create -f environment.yml
-conda activate bosch
-```
-
-```bash
+python -m venv .venv && source .venv/bin/activate   # or your preferred env manager
 pip install -r requirements.txt
 ```
 
-`boto3` is included in both `environment.yml` and `requirements.txt` (added during the Docker/S3
-hardening phase), so either install path above already gives you everything Track 3's upload,
-`src/utils/s3_utils.py`, and the dashboard's Production Monitoring page need for S3 access — no
-separate install step required.
+(`environment.yml` was removed in PF2 of the portfolio master plan — `requirements.txt` is now the
+single, pinned dependency source for both local setup and Docker.)
+
+`boto3` is included in `requirements.txt` (added during the Docker/S3 hardening phase), so the
+install above already gives you everything Track 3's upload, `src/utils/s3_utils.py`, and the
+dashboard's Production Monitoring page need for S3 access — no separate install step required.
 
 ## 2. Required local files/artifacts
 
