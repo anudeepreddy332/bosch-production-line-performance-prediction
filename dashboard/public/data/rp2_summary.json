@@ -1,0 +1,59 @@
+{
+  "reproduce": "PYTHONPATH=. python scripts/train_e3_rolling_origin.py",
+  "cross_origin_summary": {
+    "n_folds": 5,
+    "mean_mcc": 0.119437,
+    "std_mcc": 0.054042,
+    "ci_95_lower": 0.052345,
+    "ci_95_upper": 0.186528,
+    "min_mcc": 0.061104,
+    "max_mcc": 0.181642,
+    "degradation_vs_incv_absolute": -0.033933,
+    "degradation_vs_incv_pct": -22.13,
+    "corr_test_posrate_vs_mcc": 0.6792
+  },
+  "fold_results": [
+    {
+      "fold_idx": 0,
+      "test_chunks": "18-33",
+      "test_pos_rate": 0.007994,
+      "oot_mcc_best_threshold": 0.079719,
+      "oot_best_threshold": 0.14,
+      "oot_mcc_fixed_threshold": -0.000224
+    },
+    {
+      "fold_idx": 1,
+      "test_chunks": "34-49",
+      "test_pos_rate": 0.007838,
+      "oot_mcc_best_threshold": 0.181642,
+      "oot_best_threshold": 0.4,
+      "oot_mcc_fixed_threshold": 0.032742
+    },
+    {
+      "fold_idx": 2,
+      "test_chunks": "50-64",
+      "test_pos_rate": 0.009407,
+      "oot_mcc_best_threshold": 0.170451,
+      "oot_best_threshold": 0.72,
+      "oot_mcc_fixed_threshold": 0.047372
+    },
+    {
+      "fold_idx": 3,
+      "test_chunks": "65-82",
+      "test_pos_rate": 0.003328,
+      "oot_mcc_best_threshold": 0.061104,
+      "oot_best_threshold": 0.4,
+      "oot_mcc_fixed_threshold": 0.055129
+    },
+    {
+      "fold_idx": 4,
+      "test_chunks": "83-118",
+      "test_pos_rate": 0.003935,
+      "oot_mcc_best_threshold": 0.104268,
+      "oot_best_threshold": 0.62,
+      "oot_mcc_fixed_threshold": 0.041643
+    }
+  ],
+  "incv_mcc": 0.15337,
+  "incv_threshold": 0.91
+}
