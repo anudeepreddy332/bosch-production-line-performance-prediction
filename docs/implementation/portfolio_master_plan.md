@@ -584,7 +584,7 @@ PF8 remains an elective backlog thereafter.
 
 ### PF6 — Artifacts & v1.0.0 (M2 gate)
 
-**Status: IN PROGRESS**
+**Status: COMPLETE (CP6 approved 2026-07-03)**
 
 - **Objective:** artifact hygiene finished, release automation live, portfolio launched.
 - **Depends on:** PF4 + PF5.
@@ -604,16 +604,56 @@ PF8 remains an elective backlog thereafter.
   release workflow artifact availability (repo-tracked files + documented manual pickle upload);
   filter-repo temptation (**forbidden**).
 - **Validation checklist:**
-  - [ ] `grep -rn "models/" src scripts apps --include="*.py"` — only training writers or
+  - [x] `grep -rn "models/" src scripts apps --include="*.py"` — only training writers or
         documented download consumers remain
-  - [ ] Fresh `git clone` + `make setup && make test` green in a clean environment
-  - [ ] `v1.0.0-rc` rehearsal produces a correct draft Release; then real tag on `main`
-  - [ ] `CHANGELOG.md` has the `v1.0.0` entry; release body links it
-  - [ ] Weekly health workflow passes on manual dispatch; uptime monitors green
-  - [ ] Final audit walkthrough: all must-fixes + freeze-checklist items ✓
+  - [x] Fresh `git clone` + `make setup && make test` green in a clean environment
+  - [x] `v1.0.0-rc` rehearsal produces a correct draft Release; then real tag on `main`
+  - [x] `CHANGELOG.md` has the `v1.0.0` entry; release body links it
+  - [x] Weekly health workflow passes on manual dispatch; **uptime monitors: not set up** — this
+        is an external, user-account action (creating a third-party monitoring account) that I
+        cannot perform on the user's behalf; flagged as an open user-side item, not blocking
+        CP6 approval.
+  - [x] Final audit walkthrough: firewall grep clean, `gitleaks` clean (146 commits), all 23
+        pre-existing tags reachable from `main` (no orphans) — see execution record for the
+        "must-fixes/freeze-checklist" substitution note (same class of issue as PF5's).
 - **Git workflow:** `portfolio/PF6-release` (`PF6 chore:/ci:/docs:`), PR + `--no-ff`, annotated
   `v1.0.0` on `main`, push with tags, publish Release.
 - **Stopping point:** CP6 = **M2 launch review + PF7 go/no-go**. **Effort: 4–6 h.**
+- **Deviation:** "Final audit walkthrough: all must-fixes + freeze-checklist items" references a
+  document not locatable as a committed file (same issue as PF5's "audit §9 question list" —
+  checked `docs/production_readiness_audit.md`'s actual §14 "Final Prioritized Checklist" and §9,
+  neither matches). Substituted the concrete, locatable equivalents: re-verified M1's gating
+  conditions (CI green, secrets clean, firewall clean) still hold, and re-verified the three
+  tracks' freeze conditions (tags present and reachable, firewall clean) still hold.
+- **Execution record (2026-07-03):** Untracked `models/{baseline,dataset_g,dataset_h,
+  meta_model}_model.pkl` (~93 MB) from `HEAD` via `git rm --cached`, no history rewrite (retrievable
+  from `git show <pre-PF6-ref>:models/<file>.pkl`, verified). `CHANGELOG.md` added (Keep a Changelog
+  format, `v1.0.0` entry, prehistory pointer to the 23-tag series). `.github/workflows/release.yml`
+  (tag `v*` → draft Release attaching `leaderboard.json`/`training_summary.json`/Evidently HTML/
+  model card) and `.github/workflows/weekly-health.yml` (mkdocs strict link check + public-URL
+  probes) added. README/model card/data card updated with the `gh release download` flow.
+  PR #6: CI green (lint+test, docker build, leaderboard schema); merged (`--merge`, commit
+  `91baa5f`). Post-merge: `weekly-health.yml` manually dispatched on `main`, both jobs green,
+  public-URL probes confirmed live 200s against `https://bosch.themachinist.org/` and `/docs/`.
+  Rehearsed with an annotated `v1.0.0-rc1` tag first — `release.yml` produced a correct draft
+  Release (4 correct assets, correct body linking `CHANGELOG.md`) — then deleted the rehearsal
+  tag/release before cutting the real one. Annotated `v1.0.0` tag pushed to `main`; `release.yml`
+  ran successfully, producing a draft Release with the same 4 repo-tracked assets and correct body.
+  Model pickles uploaded manually per the user's explicit authorization (`gh release upload v1.0.0
+  models/*.pkl`) — the 4 files had to first be recovered via `git show` from the pre-untrack commit,
+  since an incidental `git pull --ff-only` earlier in this session had deleted them from the local
+  working tree as a side effect of fast-forwarding through the untrack commit (flagged to the user
+  when discovered); recovered content verified byte-count-identical to the original files and,
+  independently, each payload's `data_fingerprint` verified to match `outputs/training_summary.json`
+  exactly after reloading via `joblib.load`. Final release: 8 assets (4 tracked docs/metrics files +
+  4 model pickles), all correct sizes/fingerprints, `draft: true`. Firewall grep clean; `gitleaks`
+  clean (146 commits, git history); all 23 pre-existing tags confirmed reachable from `main`.
+- **Launch status:** Release intentionally left as a **draft** pending one more explicit
+  confirmation from the user to publish (make it public) — publishing is the one action in this
+  phase categorized as "visible to others" under the assistant's own operating rules, and the
+  release workflow was deliberately designed to never auto-publish. See CP6 report for the
+  specific ask.
+- **CP6 outcome (2026-07-03): APPROVED**, pending final publish confirmation (see above).
 
 ### PF7 — Live tier (OPTIONAL — gated on explicit CP6 go/no-go)
 
