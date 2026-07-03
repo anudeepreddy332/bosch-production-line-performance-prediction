@@ -67,7 +67,7 @@ Scope is fixed by the audit plus exactly eight ratified amendments:
 | PF0   | Research freeze & unification + registry | COMPLETE    | CP0 ✓ approved 2026-07-03 | 4–7 h |
 | PF1   | Headline documents                     | COMPLETE    | CP1 ✓ approved 2026-07-03 | 8–12 h |
 | PF2   | Code hygiene                           | COMPLETE    | CP2 ✓ approved 2026-07-03 | 11–15 h |
-| PF3   | Tests + CI (M1 gate)                   | NOT STARTED | CP3        | 7–9 h     |
+| PF3   | Tests + CI (M1 gate)                   | IN PROGRESS | CP3        | 7–9 h     |
 | PF4   | Recruiter dashboard + hosting          | NOT STARTED | CP4        | 18–28 h   |
 | PF5   | Documentation site                     | NOT STARTED | CP5        | 8–12 h    |
 | PF6   | Artifacts & v1.0.0 (M2 gate)           | NOT STARTED | CP6        | 4–6 h     |
@@ -323,7 +323,7 @@ PF8 remains an elective backlog thereafter.
 
 ### PF3 — Tests + CI (M1 gate)
 
-**Status: NOT STARTED**
+**Status: IN PROGRESS**
 
 - **Objective:** production-discipline claims become machine-checked.
 - **Depends on:** PF2 (import layout, Dockerfiles, pyproject).
