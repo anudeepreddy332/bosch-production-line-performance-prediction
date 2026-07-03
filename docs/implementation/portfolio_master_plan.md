@@ -67,7 +67,7 @@ Scope is fixed by the audit plus exactly eight ratified amendments:
 | PF0   | Research freeze & unification + registry | COMPLETE    | CP0 ✓ approved 2026-07-03 | 4–7 h |
 | PF1   | Headline documents                     | COMPLETE    | CP1 ✓ approved 2026-07-03 | 8–12 h |
 | PF2   | Code hygiene                           | COMPLETE    | CP2 ✓ approved 2026-07-03 | 11–15 h |
-| PF3   | Tests + CI (M1 gate)                   | AWAITING REVIEW (CP3) | CP3 | 7–9 h |
+| PF3   | Tests + CI (M1 gate)                   | COMPLETE    | CP3 ✓ approved 2026-07-03 | 7–9 h |
 | PF4   | Recruiter dashboard + hosting          | NOT STARTED | CP4        | 18–28 h   |
 | PF5   | Documentation site                     | NOT STARTED | CP5        | 8–12 h    |
 | PF6   | Artifacts & v1.0.0 (M2 gate)           | NOT STARTED | CP6        | 4–6 h     |
@@ -323,7 +323,7 @@ PF8 remains an elective backlog thereafter.
 
 ### PF3 — Tests + CI (M1 gate)
 
-**Status: AWAITING REVIEW (CP3)**
+**Status: COMPLETE (CP3 approved 2026-07-03)**
 
 - **Objective:** production-discipline claims become machine-checked.
 - **Depends on:** PF2 (import layout, Dockerfiles, pyproject).
@@ -371,6 +371,15 @@ PF8 remains an elective backlog thereafter.
   commit `b98773f`); CI confirmed green on `main` itself immediately after (`push` trigger,
   run `28642207678`, success) — the full checklist item "CI green on PR and on `main`; 3
   consecutive re-runs green" is now satisfied end-to-end.
+- **CP3 outcome (2026-07-03): APPROVED.** M1 ("safe to share") reached. User requested one
+  additional closing item before PF4: a repository secrets scan — recorded immediately below and
+  in §8 evidence; no corrections requested against the PF3 implementation itself.
+- **Secrets scan (2026-07-03): CLEAN.** `gitleaks detect` (v8.30.1) against full git history (129
+  commits, ~6.86 MB scanned) → "no leaks found". Working tree confirmed clean (`git status`);
+  `.env.example` (tracked) is a placeholder template with all values blank; the real local `.env`
+  exists on disk only, is `.gitignore`d (line 13) and `.dockerignore`d, and `git check-ignore -v`
+  confirms it has never been tracked. M1 "secrets scan clean" completion criterion (§8) now fully
+  satisfied. PF4 authorized to begin.
 
 ### PF4 — Recruiter dashboard + hosting
 
