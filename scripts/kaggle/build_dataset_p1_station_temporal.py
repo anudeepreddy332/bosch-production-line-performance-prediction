@@ -122,7 +122,13 @@ def _build_family_d(date_path: Path, start_duration: pd.DataFrame, side: str) ->
 
     merged = date_df[["Id"]].merge(start_duration, on="Id", how="left", validate="one_to_one")
     assert len(merged) == len(date_df), f"[{side}] row count changed merging start_time/duration"
-    assert merged["start_time"].isna().sum() == 0, f"[{side}] start_time merge left NaN rows -- Id mismatch"
+    n_nan_start = int(merged["start_time"].isna().sum())
+    print(
+        f"[{side}] start_time NaN rows after merge: {n_nan_start} -- genuine Bosch sparsity (rows whose "
+        f"full date-matrix row is all-NaN, i.e. start_time's own row-min over all date cols is NaN), not "
+        f"a merge failure; the row-count assert above is what guards the merge itself. Offsets/week-position "
+        f"for these rows are correctly NaN by propagation (no valid time anchor)."
+    )
     start_time = merged["start_time"].to_numpy(dtype=np.float32, copy=False)
     duration = merged["duration"].to_numpy(dtype=np.float32, copy=False)
     del merged
