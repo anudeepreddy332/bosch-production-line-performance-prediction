@@ -1,5 +1,7 @@
 # Track 2: Kaggle Submission
 
+> **Track:** 2 (frozen) · **Status:** Verified for `dataset_h`; other models documented as blocked
+
 ## What it is
 
 Track 2 generates a Kaggle leaderboard submission: unlabeled Kaggle test data in, `Id,Response`

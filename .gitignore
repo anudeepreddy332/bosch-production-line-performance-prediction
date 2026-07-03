@@ -85,3 +85,6 @@ chatgpt_handoff
 docs/agent_memory/
 # Local Netlify folder
 .netlify
+
+# MkDocs build output (PF5) -- built fresh in CI, copied into dashboard/dist/docs/, never committed
+/site/

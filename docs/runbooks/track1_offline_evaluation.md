@@ -1,5 +1,7 @@
 # Track 1: Offline Training + Evaluation
 
+> **Track:** 1 · **Status:** Verified
+
 ## What it is
 
 Track 1 is the only place in this project where supervised metrics (MCC, precision, recall,

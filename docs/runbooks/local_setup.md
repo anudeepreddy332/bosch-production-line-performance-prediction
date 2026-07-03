@@ -1,5 +1,7 @@
 # Local Setup
 
+> **Track:** All · **Status:** Verified
+
 How to get this repo runnable on your own machine: environment, required local artifacts, `.env`
 variables, and sanity checks. Everything below was verified against the current branch
 (`feature/dataset-h-production-batch-inference`) using a conda env named `bosch`.

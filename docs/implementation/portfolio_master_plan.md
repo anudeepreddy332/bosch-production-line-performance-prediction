@@ -520,7 +520,7 @@ PF8 remains an elective backlog thereafter.
 
 ### PF5 — Documentation site
 
-**Status: NOT STARTED**
+**Status: IN PROGRESS**
 
 - **Objective:** 8,300 lines of existing docs become a navigable asset; every track independently
   understandable.

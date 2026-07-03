@@ -45,6 +45,33 @@ column exclusion, Evidently sees exactly one column (`risk_score` → `pred`). B
 Scripts: `scripts/run_production_inference.py`, `scripts/run_drift_monitoring.py`.
 Validation: `scripts/validate_system.py` → `validate_production_inference()`.
 
+## Track 2 — Kaggle Research (quarantined, frozen)
+
+```mermaid
+flowchart TD
+    W["Kaggle Test CSVs\ntest_numeric/test_date/test_categorical"] --> X["src/kaggle/\nleaderboard-only feature engineering\n(record-adjacency, timing-cohort, duplicate-identity, raw-wide)"]
+    X --> Y["scripts/kaggle/generate_submission_K2.py"]
+    Y --> Z["submission.csv\nId,Response"]
+    Z -.->|"manual upload,\nnever automated"| KL["Kaggle Leaderboard\npublic/private MCC"]
+```
+
+**Data flow:** unlabeled Kaggle test data → feature engineering that is deliberately allowed to
+include leakage families the production charter forbids (record-adjacency, neighbor/identity label
+lookups, timing-cohort geometry, raw ~968-column numeric width) → `submission.csv` → scored by
+Kaggle itself, off-platform. No leaderboard number is computed by, or fed back into, this
+repository's own code — Kaggle's servers are the only source of `public_mcc`/`private_mcc`.
+
+**Quarantine, not just convention:** `src/kaggle/` and `scripts/kaggle/` are the only trees allowed
+to contain this logic. A firewall grep (`import.*kaggle` outside those two trees) runs at every
+merge and must be empty — nothing in Track 1 or Track 3 imports Track 2 code, and no Kaggle metric
+or conclusion may appear in the production decision log. See
+[`docs/research/kaggle_decisions.md`](research/README.md) for governance and
+[Track 2](track2.md) for the full ladder. **Frozen** as of `KDR-009` (tag `track2-frozen`) — no
+further experiment without a new pre-registered KDR and explicit user authorization.
+
+Scripts: `scripts/kaggle/generate_submission_K2.py` (imports `scripts/generate_submission.py` by
+exact module path — the one file the PF2 `scripts/` regroup deliberately left at the top level).
+
 ## Runtime Components
 
 | Component | Track | File |
@@ -54,6 +81,8 @@ Validation: `scripts/validate_system.py` → `validate_production_inference()`.
 | Offline batch eval (labeled replay) | T1 | `scripts/run_offline_batch_eval.py` |
 | Production batch inference (label-free) | T3 | `scripts/run_production_inference.py` |
 | Score-distribution drift monitoring | T3 | `src/monitoring/drift_detection.py` |
+| Kaggle feature engineering (quarantined) | T2 | `src/kaggle/` |
+| Kaggle submission generation (quarantined) | T2 | `scripts/kaggle/generate_submission_K2.py` |
 | API | T1 | `apps/api/main.py` |
 | Dashboard View B (decision analysis) | T1 | `apps/streamlit_dashboard/app.py` |
 | Dashboard View A (production monitoring) | T3 | `apps/streamlit_dashboard/app.py` |

@@ -1,5 +1,7 @@
 # Docker
 
+> **Track:** All · **Status:** Verified
+
 ## Current files and services
 
 | File | Builds | Exposes | Installs (pip, inside the image) |

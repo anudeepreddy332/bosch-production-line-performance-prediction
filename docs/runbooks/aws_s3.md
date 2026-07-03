@@ -1,5 +1,7 @@
 # AWS S3
 
+> **Track:** 3 (+ dashboard `DATA_SOURCE=s3` mode) · **Status:** Verified
+
 ## Required bucket / env vars
 
 `src/utils/s3_utils.py` is the **single, canonical S3 client** for this entire project —

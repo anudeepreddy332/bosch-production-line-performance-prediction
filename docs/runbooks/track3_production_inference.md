@@ -1,5 +1,7 @@
 # Track 3: Production Inference (Label-Free Batch Scoring)
 
+> **Track:** 3 · **Status:** Verified
+
 ## What it is
 
 Track 3 simulates a live, unlabeled production scoring stream: it treats the real, unlabeled

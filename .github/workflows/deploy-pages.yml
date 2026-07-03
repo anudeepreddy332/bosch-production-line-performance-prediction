@@ -16,11 +16,14 @@ name: deploy-pages
 # workflow's filename as the frozen spec named it; only the deploy target
 # changed.
 #
-# Runs only when dashboard/ changes. The JSON data bundle under
-# dashboard/public/data/ is committed by scripts/ops/export_dashboard_data.py
-# (run locally, not in CI -- CI has no access to the gitignored parquets it
-# reads), so this workflow only builds and ships the already-committed
-# bundle.
+# Runs when dashboard/ or the PF5 MkDocs docs site changes. The JSON data
+# bundle under dashboard/public/data/ is committed by
+# scripts/ops/export_dashboard_data.py (run locally, not in CI -- CI has no
+# access to the gitignored parquets it reads), so this workflow only builds
+# and ships the already-committed bundle. The MkDocs site (mkdocs.yml, docs/)
+# is built fresh every run and copied into dist/docs/ before deploy, so the
+# same Netlify site serves the dashboard at / and the docs site at /docs/
+# (PF5, docs/implementation/portfolio_master_plan.md).
 #
 # Requires two repo secrets before this workflow can succeed (user-side
 # setup, not created by this workflow): NETLIFY_AUTH_TOKEN (a personal
@@ -33,10 +36,16 @@ on:
     branches: [main]
     paths:
       - "dashboard/**"
+      - "docs/**"
+      - "mkdocs.yml"
+      - "pyproject.toml"
       - ".github/workflows/deploy-pages.yml"
   pull_request:
     paths:
       - "dashboard/**"
+      - "docs/**"
+      - "mkdocs.yml"
+      - "pyproject.toml"
       - ".github/workflows/deploy-pages.yml"
 
 jobs:
@@ -79,6 +88,24 @@ jobs:
               print("Bundle exceeds the 1.5 MB gzipped budget.", file=sys.stderr)
               sys.exit(1)
           EOF
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install MkDocs (repo root -- pyproject.toml's "docs" extra)
+        working-directory: .
+        run: pip install -e ".[docs]"
+
+      - name: Build docs site (MkDocs Material, strict)
+        working-directory: .
+        run: mkdocs build --strict
+
+      - name: Merge docs site into dashboard build under /docs/
+        working-directory: .
+        run: |
+          mkdir -p dashboard/dist/docs
+          cp -r site/. dashboard/dist/docs/
 
       - name: Deploy to Netlify (production, main only)
         if: ${{ github.event_name == 'push' }}
