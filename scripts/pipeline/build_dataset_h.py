@@ -10,8 +10,8 @@ import pandas as pd
 
 from src.features.dataset_h_pipeline import (
     compute_dataset_h_lookup_artifacts,
-    parse_signature,
     pairs_from_tokens,
+    parse_signature,
     transitions_from_tokens,
 )
 from src.logger import setup_logger

@@ -13,9 +13,9 @@ All inputs come exclusively from outputs/production/dataset_h/.
 from __future__ import annotations
 
 import argparse
-from pathlib import Path
 import sys
 import tempfile
+from pathlib import Path
 
 import pandas as pd
 
@@ -23,7 +23,6 @@ ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
 from src.monitoring.drift_detection import generate_evidently_report
-
 
 OUT = ROOT / "outputs"
 MON = OUT / "monitoring"

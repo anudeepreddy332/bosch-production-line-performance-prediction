@@ -10,20 +10,44 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = { file = "LICENSE" }
 
+[project.optional-dependencies]
+# Dev/test/lint tooling only -- requirements.txt remains the single pinned runtime
+# dependency source for the app itself (used by Docker and by this same CI).
+dev = [
+    "pytest>=8,<10",
+    "ruff>=0.6,<1",
+    "httpx>=0.27,<1",  # required by fastapi.testclient.TestClient
+]
+
 [tool.setuptools.packages.find]
 include = ["src*", "scripts*", "apps*"]
 
 [tool.ruff]
 line-length = 110
 target-version = "py311"
+# scripts/kaggle/ and src/kaggle/ are the quarantined Kaggle research track (frozen,
+# tag track2-frozen) -- excluded from lint so PF3 never has a reason to touch that tree.
+exclude = ["scripts/kaggle", "src/kaggle"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I"]
-# Finalized in PF3 (docs/implementation/portfolio_master_plan.md) once the codebase is
-# brought to a clean baseline; this is the PF2 config stub.
+# PF3 baseline (docs/implementation/portfolio_master_plan.md): targeted ignores for two rule
+# classes that would require refactoring working code to satisfy, not fixing an actual defect --
+# out of scope per the ledger ("no refactoring to satisfy lint").
+ignore = [
+    "E501",  # line-too-long: 91 pre-existing long lines (docstrings, error messages, long
+             # boolean expressions) across research/production scripts; wrapping them is a
+             # pure formatting change with no functional benefit and a real regression risk
+             # (docstrings/error-message wording is load-bearing in a few places).
+    "E402",  # module-import-not-at-top-of-file: deliberate in every case it fires --
+             # scripts that support standalone `python scripts/pipeline/X.py` invocation do
+             # `sys.path.insert(0, str(ROOT))` before `from scripts...`/`from src...` imports
+             # so those imports resolve without PYTHONPATH=. set externally. Rewriting this
+             # pattern is the refactor the ledger says not to do for lint's sake alone.
+]
 
 [tool.pytest.ini_options]
+testpaths = ["tests"]
 markers = [
     "slow: manually-run regression-anchor tests (not run in CI)",
 ]
-# Test paths/settings finalized in PF3 alongside the tests/ suite itself.

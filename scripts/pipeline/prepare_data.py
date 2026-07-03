@@ -11,9 +11,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import pandas as pd
+import psutil
 import pyarrow as pa
 import pyarrow.parquet as pq
-import psutil
 
 from src.logger import setup_logger
 

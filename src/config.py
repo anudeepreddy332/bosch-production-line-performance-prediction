@@ -1,9 +1,11 @@
 """
 Configuration loader with validation.
 """
-import yaml
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any, Dict
+
+import yaml
+
 from src.logger import setup_logger
 
 logger = setup_logger(__name__)

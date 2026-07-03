@@ -8,7 +8,6 @@ from evidently import Report
 from evidently.metrics import DriftedColumnsCount, ValueDrift
 from evidently.presets import DataDriftPreset
 
-
 ID_COLUMNS = {"id", "row_id", "index"}
 
 

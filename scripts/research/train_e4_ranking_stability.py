@@ -54,6 +54,7 @@ from typing import Any
 
 import lightgbm as lgb
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
@@ -806,7 +807,7 @@ def _plot_ranking_metrics(fold_results: list[dict], out_dir: Path) -> None:
             ci_lo.append(v - lo if not np.isnan(v) and not np.isnan(lo) else 0)
             ci_hi.append(hi - v if not np.isnan(v) and not np.isnan(hi) else 0)
 
-        bars = ax.bar(fold_ids, vals, color=colors, alpha=0.8, zorder=3)
+        ax.bar(fold_ids, vals, color=colors, alpha=0.8, zorder=3)
         ax.errorbar(
             fold_ids, vals,
             yerr=[ci_lo, ci_hi],

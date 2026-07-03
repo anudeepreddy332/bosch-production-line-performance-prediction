@@ -3,8 +3,8 @@ Centralized logging configuration for the project.
 """
 import logging
 import sys
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 
 def setup_logger(name: str, log_dir: str = "logs") -> logging.Logger:

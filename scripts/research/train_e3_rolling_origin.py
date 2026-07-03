@@ -249,7 +249,6 @@ def _train_and_eval_fold(
 ) -> dict:
     """Run one rolling-origin fold: recompute features, train, evaluate."""
     t0 = time.perf_counter()
-    mem_before = _memory_gb()
 
     is_e2_anchor = (train_max_chunk == 82 and test_min_chunk == 83)
 
