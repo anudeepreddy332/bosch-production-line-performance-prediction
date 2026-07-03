@@ -11,6 +11,10 @@ interface ProvenancePopoverProps {
   /** source -> KDR -> tag chain, in order. Every entry must come from data already in
    * governance.json / repo_links.json -- never invented here. */
   chain: ProvenanceLink[];
+  /** "inline" wraps a bare value (a number, a short string) in a <span> -- valid HTML. "block"
+   * wraps a card-shaped child (e.g. StatCard, which renders a <div>) in a <div> instead, so a
+   * block-level child never ends up nested inside an inline element. */
+  as?: "inline" | "block";
 }
 
 /**
@@ -19,7 +23,7 @@ interface ProvenancePopoverProps {
  * paragraph of instructions. Dismissible via Escape or blur; works on hover AND focus so it's
  * not hover-only information.
  */
-export default function ProvenancePopover({ children, chain }: ProvenancePopoverProps) {
+export default function ProvenancePopover({ children, chain, as = "inline" }: ProvenancePopoverProps) {
   const [visible, setVisible] = useState(false);
   const popoverId = useId();
 
@@ -27,9 +31,12 @@ export default function ProvenancePopover({ children, chain }: ProvenancePopover
     return <>{children}</>;
   }
 
+  const Wrapper = as === "block" ? "div" : "span";
+  const Trigger = as === "block" ? "div" : "span";
+
   return (
-    <span
-      className="provenance-trigger"
+    <Wrapper
+      className={as === "block" ? "provenance-trigger provenance-trigger-block" : "provenance-trigger"}
       onMouseEnter={() => setVisible(true)}
       onMouseLeave={() => setVisible(false)}
       onFocus={() => setVisible(true)}
@@ -38,9 +45,9 @@ export default function ProvenancePopover({ children, chain }: ProvenancePopover
         if (e.key === "Escape") setVisible(false);
       }}
     >
-      <span tabIndex={0} aria-describedby={visible ? popoverId : undefined} className="provenance-value">
+      <Trigger tabIndex={0} aria-describedby={visible ? popoverId : undefined} className="provenance-value">
         {children}
-      </span>
+      </Trigger>
       {visible && (
         <span role="tooltip" id={popoverId} className="provenance-popover">
           {chain.map((link, i) => (
@@ -53,6 +60,6 @@ export default function ProvenancePopover({ children, chain }: ProvenancePopover
           ))}
         </span>
       )}
-    </span>
+    </Wrapper>
   );
 }

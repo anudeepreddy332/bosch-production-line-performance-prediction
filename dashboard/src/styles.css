@@ -831,9 +831,27 @@ a.external-link:hover {
   display: inline-block;
 }
 
+.provenance-trigger-block {
+  display: block;
+}
+
 .provenance-value {
   border-bottom: 1px dashed var(--color-accent-strong);
   cursor: help;
+}
+
+.provenance-trigger-block .provenance-value {
+  display: block;
+  border-bottom: none;
+  cursor: help;
+  border-radius: var(--radius);
+  outline-offset: 2px;
+  transition: box-shadow var(--motion-fast) var(--ease-standard);
+}
+
+.provenance-trigger-block:hover .provenance-value,
+.provenance-trigger-block:focus-within .provenance-value {
+  box-shadow: 0 0 0 2px var(--color-accent-strong);
 }
 
 .provenance-popover {
