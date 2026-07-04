@@ -684,10 +684,11 @@ PF8 remains an elective backlog thereafter.
 
 ### PF8 — Polish + backlog (OPTIONAL, elective, post-M2)
 
-**Status: AWAITING REVIEW (CP8 — dashboard presentation pass)**
+**Status: COMPLETE (dashboard v2 elective item; CP8 approved 2026-07-04)**
 
-- **Fixed items:** Decision-Explorer GIF; tag-timeline graphic; `CITATION.cff`;
-  `.pre-commit-config.yaml` (ruff + whitespace); blog post on themachinist.org. Each independent,
+- **Fixed items:** Decision-Explorer GIF (open — see CP8 closure); tag-timeline graphic (open);
+  `CITATION.cff` (done, see CP8 closure); `.pre-commit-config.yaml` (ruff + whitespace, open);
+  blog post on themachinist.org (open). Each independent,
   1–2 h; branch per item or one `portfolio/PF8-polish`; no checkpoint beyond tone review of the
   blog post.
 - **Backlog intake:** see §11.
@@ -766,8 +767,42 @@ PF8 remains an elective backlog thereafter.
     contexts — zero console/page/network errors on all 4 routes in the final pass. `git diff`
     against `main` confirmed empty on `dashboard/public/data/`, `scripts/`, and `src/` (the
     pipeline) for the entire branch — no metric, governance, or data change anywhere.
-  - **Not yet done:** merge to `main` — this branch stops at CP8 for review, per the user's
-    explicit instruction ("do not merge without CP approval").
+- **Documentation synchronization (2026-07-04, commit `6ba084b`):** README.md and
+  SYSTEM_OVERVIEW.md brought into alignment with the actual PF0–PF6 completed state — replaced
+  stale "future work" language (CI, dashboard, docs site, `v1.0.0` were all described as queued;
+  all four were shipped), the DNS-placeholder dashboard line, and a stale "PF1 active" governance
+  reference; added the new "production pipeline, end to end" section to SYSTEM_OVERVIEW.md (7
+  stages, real script paths, written from the repository itself, not copied from `CLAUDE.md`);
+  every link, script path, and live URL verified before committing. Found two additional
+  inconsistencies while editing (fixed in the same commit): `docs/architecture.md` already has a
+  Track 2 lane that SYSTEM_OVERVIEW still described as "queued," and SYSTEM_OVERVIEW repeated the
+  already-logged stale "50k dev sample" claim from `docs/reproducible_metrics_report.md`.
+- **CP8 backlog closure (2026-07-04, commit `df09560`):** reviewed the full PF8 backlog before
+  merge and closed four small, verified, low-risk items — `CITATION.cff` added (enables GitHub's
+  citation button); `docs/reproducible_metrics_report.md` corrected (the committed models are
+  trained on the full-scale 1,183,747-row run per `data/processed/PROVENANCE.json`, not the 50k
+  dev sample it described as current; also fixed stale `scripts/` paths missing the `pipeline/`
+  prefix and a stale claim that `run_drift_monitoring.py` reads the historical blend file — it
+  doesn't, confirmed by reading the script); the Makefile's stale "PF4 work, not implemented yet"
+  comment removed; `matplotlib` added to `requirements.txt` (used by
+  `scripts/research/train_e4_ranking_stability.py`, previously unlisted). Left open, explicitly:
+  Decision-Explorer GIF and the tag-timeline graphic (visual-asset production, not documentation
+  maintenance — and the dashboard they'd showcase wasn't live yet at review time); the blog post
+  (needs the user's own voice/tone per this ledger's own tone-review note); `.pre-commit-config.yaml`
+  (not reviewed this pass, no urgency).
+- **Merge (2026-07-04):** PR #7 merged to `main` via `gh pr merge --merge` (real merge commit
+  `c0a30cb`, not squash). Post-merge CI on `main`: lint/test/docker/leaderboard-schema all green;
+  `deploy-pages`'s code-health steps (typecheck, build, bundle budget, `mkdocs build --strict`) all
+  green; the production Netlify deploy step itself failed (`JSONHTTPError: Forbidden`) — expected
+  and not investigated further, per the user's advance notice that the Netlify team has exhausted
+  its monthly build credits. `main` is fully validated and correct; the production deploy will
+  succeed once credits reset and the existing workflow is re-run, with no further changes needed.
+  **Self-reported process note:** pushing the two pre-merge commits to the open PR branch
+  auto-triggered `deploy-pages`'s PR-preview Netlify deploy (existing CI wiring, not a manual
+  deploy action) — it completed successfully, meaning it did consume Netlify build minutes despite
+  the user's instruction not to trigger a deployment. This was not anticipated before pushing;
+  flagged to the user in the same turn it was discovered.
+- **CP8 outcome (2026-07-04): APPROVED.** PF8 (dashboard v2 elective item) COMPLETE.
 
 ## 10. Frozen technical decisions
 
@@ -798,7 +833,7 @@ PF8. Correctness bugs are fixed in the phase that finds them and noted in that p
   not listed in `requirements.txt` (pre-existing gap, predates PF2's scripts/ regroup — confirmed
   the script already required it and the manifest already lacked it before this phase touched the
   file). Add `matplotlib` to `requirements.txt` whenever this script's dependencies are next
-  audited.
+  audited. **RESOLVED in PF8** (see CP8 closure above) — added.
 - 2026-07-03, PF4: `docs/reproducible_metrics_report.md` §1 ("World A") is stale — it states "no
   full-scale run on record" and quotes 50,000-row dev-sample OOF MCC values, but the actual
   `outputs/training_summary.json` and `data/features/oof_predictions_{baseline,dataset_g,
@@ -807,12 +842,25 @@ PF8. Correctness bugs are fixed in the phase that finds them and noted in that p
   run." The doc was not updated after that run happened. PF4's dashboard export reads directly
   from the current `outputs/training_summary.json`/parquets (the actual artifacts), not from this
   doc's stale prose, so no dashboard numbers are affected — but the doc itself should be refreshed
-  to reflect the full-scale result whenever next touched.
+  to reflect the full-scale result whenever next touched. **RESOLVED in PF8** (see CP8 closure
+  above) — §1 rewritten to describe the full-scale run as current; stale `scripts/` paths and a
+  stale blend-file-consumer claim fixed in the same pass.
 - 2026-07-03, PF6: `Makefile`'s `dashboard-data` target comment says
   "scripts/ops/export_dashboard_data.py is PF4 work... not implemented yet," which is now stale --
   PF4 shipped that script and the ledger marked PF4 COMPLETE. Not a correctness bug (the target's
   own `if [ -f ... ]` check still works correctly either way); just an outdated comment. Refresh
-  whenever the Makefile is next touched.
+  whenever the Makefile is next touched. **RESOLVED in PF8** (see CP8 closure above) — comment
+  updated.
+- 2026-07-04, PF8: `docs/architecture.md` already has a Track 2 lane (added in PF5); SYSTEM_OVERVIEW.md
+  still described Track 2 as "no equivalent diagram yet... queued." **RESOLVED in PF8** — fixed in
+  the same documentation-sync commit that found it (`6ba084b`).
+- 2026-07-04, PF8: pushing pre-merge commits to the open PF8 PR branch auto-triggered a Netlify PR-preview
+  deploy (existing CI wiring: `deploy-pages.yml` runs on every `pull_request` sync event), which
+  completed successfully and consumed Netlify build minutes despite the user's explicit instruction
+  not to trigger a deployment during this finalization pass. Not anticipated before pushing; no
+  corrective action taken (the deploy already completed, nothing to undo). Worth remembering for
+  any future work on this branch pattern while Netlify credits remain constrained: a plain `git
+  push` to a PR branch is not a no-op with respect to Netlify usage.
 
 ## 12. Ledger protocol
 
