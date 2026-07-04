@@ -6,62 +6,42 @@ the repo previously contained two disjoint, inconsistent sets of metrics ("World
 and "World B" below) without a clear statement of which one the committed pipeline
 actually produces.
 
+**Update (2026-07-04):** the full-scale run described as pending in §3a below has since been
+executed. The committed `outputs/training_summary.json` and the models distributed with the
+`v1.0.0` release reflect that full-scale run, not a dev sample — §1 is rewritten accordingly. This
+correction was tracked as a PF8 backlog item since PF4 (`docs/implementation/portfolio_master_plan.md`).
+
 ---
 
-## 1. What IS reproducible today: World A (50,000-row dev sample)
+## 1. What IS reproducible today: the full-scale run (1,183,747 rows)
 
-The local, ignored/generated `data/processed/*.parquet` and `data/features/*.parquet`
-artifacts currently on disk (excluding the `*context_meta_v2_blend*` files — see World
-B below) are a **50,000-row slice** of the full Bosch dataset, with **271 positive
-(failure) rows**, i.e. a **0.542% failure rate**. These parquet files are **not
-tracked in git** — confirmed via `git ls-files data/processed/ data/features/`, which
-returns only `data/processed/PROVENANCE.json` (explicitly un-ignored in `.gitignore`).
-The row-count/scope claim above is documented in that tracked `PROVENANCE.json`, not in
-the parquet files themselves.
-
-This is a **dev/smoke-test sample, NOT a production or Kaggle-scale result**. With
-only ~271 positives total (~54 per CV fold), metrics computed on it are noisy and
-should not be quoted as representative model performance.
+`data/processed/PROVENANCE.json` (the one data-provenance file tracked in git) records
+`"status": "full_data", "is_full_data": true`, with every processed file at its full row count
+(1,183,747 train rows, 1,183,748 test rows) — this is the **full Bosch dataset, not a dev sample**.
+The models currently distributed via the `v1.0.0` GitHub Release (see `docs/data_card.md`) were
+trained on this data.
 
 The honest out-of-fold (OOF) MCC for each model, taken directly from
-`outputs/training_summary.json` (regenerate via the training scripts below; do not
-hand-edit), is:
+`outputs/training_summary.json` (regenerate via the training scripts below; do not hand-edit), is:
 
-| Model        | OOF MCC  | Best threshold | Rows   |
-|--------------|----------|-----------------|--------|
-| baseline     | 0.0157   | 0.51            | 50,000 |
-| dataset_g    | 0.0459   | 0.32            | 50,000 |
-| dataset_h    | 0.0973   | 0.19            | 50,000 |
-| meta_model   | 0.0319   | 0.21            | 50,000 |
+| Model        | OOF MCC  | Best threshold | Rows      |
+|--------------|----------|-----------------|-----------|
+| baseline     | 0.02254  | 0.36            | 1,183,747 |
+| dataset_g    | 0.13662  | 0.90            | 1,183,747 |
+| dataset_h    | 0.15337  | 0.91            | 1,183,747 |
+| meta_model   | 0.14942  | 0.96            | 1,183,747 |
 
-(Exact values: baseline=0.015705377012653475, dataset_g=0.045940838678381495,
-dataset_h=0.09725962897650973, meta_model=0.03189334352773844.)
+Notable, currently-true findings at this scale:
+- **The meta-model is worse than its best base model** (`dataset_h` at 0.15337 vs. meta_model at
+  0.14942) — stacking the three base OOF predictions does not add value here. See
+  `docs/model_card.md` for why `dataset_h`, not the meta-model, is the deployment candidate.
+- These are the same values quoted in `docs/data_card.md`, `docs/model_card.md`, and the
+  dashboard's Model Internals page — all sourced from this same `outputs/training_summary.json`,
+  never hand-typed.
 
-**Updated 2026-06-24 on `feature/dev-sample-refresh-post-methodology-fix`** by rerunning
-Section 3b end-to-end against the current code (post `3db7901`, which removed the
-`chunk_failure_rate` leak in `dataset_g` and fold-restricted the `pair_cooccur_*`/
-`path_count` computation in `dataset_h`). `dataset_h` and `meta_model` moved from
-0.1305/0.0523 to 0.0973/0.0319 — `baseline` and `dataset_g` are materially unchanged
-(`dataset_g`'s feature list dropped `chunk_failure_rate`, which already carried zero
-feature importance pre-fix, consistent with the score not moving). `meta_model` moved
-even though no direct leakage fix targeted it, because it stacks `dataset_h`'s
-now-corrected OOF predictions as one of its meta-features. See
-`docs/evaluation_feature_quality_audit.md` for the original (pre-fix) numbers and the
-diagnosis that led to this fix; do not read that document's Section 3 table as current.
-
-Notable, currently-true findings from this sample:
-- **The meta-model is worse than its best base model** (`dataset_h` at 0.0973 vs.
-  meta_model at 0.0319) — stacking subtracts roughly two-thirds of `dataset_h`'s OOF
-  MCC, a *larger* relative gap than the pre-fix numbers showed (0.1305 vs. 0.0523).
-  This is a regressive stack on this sample size — stacking is not currently adding
-  value here.
-- **Per-fold thresholds are highly unstable**, especially for the meta-model
-  (best thresholds per fold: 0.11, 0.63, 0.43, 0.38, 0.26). This instability is
-  expected and largely explained by the tiny number of positives per fold
-  (~54), not by a code defect.
-
-Do not treat these numbers as a ceiling or floor on model capability — they
-reflect a 50k-row sample, not the full ~1.18M-row dataset.
+A smaller, explicit dev sample (§3b below) remains available for fast local iteration — its
+numbers are noisier (fewer positives per fold) and should not be quoted as representative
+performance; the full-scale numbers above are the ones cited everywhere else in this project.
 
 ---
 
@@ -79,15 +59,18 @@ reflect a 50k-row sample, not the full ~1.18M-row dataset.
 - A search of the full git history across all branches finds **no training
   script that produces `oof_predictions_context_meta_v2_blend.parquet`** on any
   branch.
-- It is kept in the repo only as a **historical demo input** for downstream
-  consumers (`scripts/run_batch_simulation.py`, `scripts/run_drift_monitoring.py`)
-  — not as evidence of a reproducible result.
+- It is kept in the repo only as an optional, best-effort historical input for
+  `scripts/pipeline/run_offline_batch_eval.py` (used only if present on disk, alongside other
+  candidate prediction blends) — not as evidence of a reproducible result. It is not read by
+  `scripts/pipeline/run_drift_monitoring.py`, which is genuinely label-free and reads only Track 3's
+  production batch parquets.
 
 Any quantitative claim derived from this file (MCC ~0.30–0.317, recall
 0.45–0.63, min-cost threshold 0.23, etc.) is **historical and unverified** until
-someone reruns a full-scale pipeline from `data/raw/` and regenerates an
-equivalent blend with a checked-in, reproducible script. Treat those numbers as
-a record of a past experiment, not a guarantee about the current codebase.
+someone reruns the full-scale pipeline (§3a) and regenerates an equivalent blend with a
+checked-in, reproducible script. Treat those numbers as a record of a past experiment, not a
+guarantee about the current codebase — and note the dashboard and cards deliberately exclude this
+file's numbers entirely (§1's full-scale run is what they cite instead).
 
 ---
 
@@ -95,68 +78,61 @@ a record of a past experiment, not a guarantee about the current codebase.
 
 ### 3a. Full-scale run (production / Kaggle-equivalent, ~1.18M rows)
 
-This processes the complete CSVs in `data/raw/` (each ~2.1–2.9 GB). It is a
-long-running, heavy job — do not run it casually. There is currently **no
-full-scale run on record**; full-scale metrics are **UNKNOWN** until this is
-executed and the resulting `outputs/training_summary.json` is reviewed.
+This processes the complete CSVs in `data/raw/` (each ~2.1–2.9 GB). It is a long-running, heavy
+job. **This has already been run** — see §1 for the resulting numbers — but the exact command
+sequence to reproduce it from a clean checkout is:
 
 ```bash
 # 1. Convert raw CSVs to Parquet (full data, no sampling — this is the default)
-python scripts/prepare_data.py --zip-path <path-to-bosch-zip-or-omit-with-skip-unzip> --overwrite
+python scripts/pipeline/prepare_data.py --zip-path <path-to-bosch-zip-or-omit-with-skip-unzip> --overwrite
 
 # 2. Build feature datasets
-python scripts/build_dataset_baseline.py
-python scripts/build_dataset_g.py
-python scripts/build_dataset_h.py
+python scripts/pipeline/build_dataset_baseline.py
+python scripts/pipeline/build_dataset_g.py
+python scripts/pipeline/build_dataset_h.py
 
 # 3. Train base models and the meta-model (in order; meta depends on base OOF preds)
-python scripts/train_baseline.py
-python scripts/train_dataset_g.py
-python scripts/train_dataset_h.py
-python scripts/train_meta_model.py
+python scripts/pipeline/train_baseline.py
+python scripts/pipeline/train_dataset_g.py
+python scripts/pipeline/train_dataset_h.py
+python scripts/pipeline/train_meta_model.py
 ```
 
-After this completes, `outputs/training_summary.json` will contain the honest,
-reproducible full-scale OOF MCC per model. **Do not publish full-scale
-production/Kaggle claims until this has actually been run and the output
-reviewed** — treat any pre-existing full-scale numbers elsewhere in the repo as
-unverified until this command sequence has been executed and the JSON output
-checked.
+Each trained model records a `data_fingerprint` (see `docs/data_card.md`) — a rerun that produces
+the same fingerprint as the table in §1 has verifiably reproduced the same result.
 
-### 3b. Explicit dev sample (fast iteration / smoke test, matches World A above)
+### 3b. Explicit dev sample (fast iteration / smoke test)
 
 ```bash
 # 1. Convert raw CSVs to Parquet, explicitly capped to the first 50,000 rows per file
-python scripts/prepare_data.py --sample-rows 50000 --sample-tag dev --overwrite
+python scripts/pipeline/prepare_data.py --sample-rows 50000 --sample-tag dev --overwrite
 
 # 2. Build feature datasets (same scripts, now operating on the 50k sample)
-python scripts/build_dataset_baseline.py
-python scripts/build_dataset_g.py
-python scripts/build_dataset_h.py
+python scripts/pipeline/build_dataset_baseline.py
+python scripts/pipeline/build_dataset_g.py
+python scripts/pipeline/build_dataset_h.py
 
 # 3. Train base models and the meta-model
-python scripts/train_baseline.py
-python scripts/train_dataset_g.py
-python scripts/train_dataset_h.py
-python scripts/train_meta_model.py
+python scripts/pipeline/train_baseline.py
+python scripts/pipeline/train_dataset_g.py
+python scripts/pipeline/train_dataset_h.py
+python scripts/pipeline/train_meta_model.py
 ```
 
-This reproduces the World-A numbers in Section 1 (modulo any randomness in
-training; see each training script for seeding). `data/processed/PROVENANCE.json`
-will record `requested_sample_rows: 50000`, `sample_tag: "dev"`, `is_full_data: false`
-after this run, so the resulting parquet files are self-documenting.
+`data/processed/PROVENANCE.json` will record `requested_sample_rows: 50000`, `sample_tag: "dev"`,
+`is_full_data: false` after this run, so the resulting parquet files are self-documenting and
+can't be confused with the full-scale run in §1.
 
 ---
 
 ## 4. Summary table: reproducibility status
 
-| Claim source                                   | Rows      | Reproducible? | Status |
-|-------------------------------------------------|-----------|----------------|--------|
-| `outputs/training_summary.json` (World A)       | 50,000    | Yes — rerun via 3b above | Honest, low-confidence due to small sample |
-| `oof_predictions_context_meta_v2_blend.parquet` (World B) | 1,183,747 | **No** — generating artifacts deleted, no script produces it | Historical / unverified |
-| Full-scale run (3a above)                       | ~1,183,747 | Yes, but **not yet run** | Unknown — must be generated before any production/Kaggle claim |
+| Claim source                                              | Rows      | Reproducible? | Status |
+|-------------------------------------------------------------|-----------|----------------|--------|
+| `outputs/training_summary.json` (current, §1)                | 1,183,747 | Yes — rerun via §3a | Honest, full-scale — the numbers cited everywhere else in this project |
+| `oof_predictions_context_meta_v2_blend.parquet` (World B)  | 1,183,747 | **No** — generating artifacts deleted, no script produces it | Historical / unverified, excluded from the dashboard |
+| Dev sample (§3b)                                           | 50,000    | Yes — rerun via §3b | Honest, low-confidence due to small sample; for fast local iteration only |
 
-If you need a number to put in a report, slide deck, or production sign-off:
-use World A numbers labeled as a 50k dev sample, or run the full-scale sequence
-in 3a and cite the resulting `outputs/training_summary.json`. Do not cite World
-B numbers as current or reproducible.
+If you need a number to put in a report, slide deck, or production sign-off: use the full-scale
+numbers in §1 (or rerun §3a and cite the resulting `outputs/training_summary.json`). Do not cite
+World B numbers as current or reproducible.

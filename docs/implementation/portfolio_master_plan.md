@@ -684,13 +684,90 @@ PF8 remains an elective backlog thereafter.
 
 ### PF8 — Polish + backlog (OPTIONAL, elective, post-M2)
 
-**Status: NOT STARTED**
+**Status: AWAITING REVIEW (CP8 — dashboard presentation pass)**
 
 - **Fixed items:** Decision-Explorer GIF; tag-timeline graphic; `CITATION.cff`;
   `.pre-commit-config.yaml` (ruff + whitespace); blog post on themachinist.org. Each independent,
   1–2 h; branch per item or one `portfolio/PF8-polish`; no checkpoint beyond tone review of the
   blog post.
 - **Backlog intake:** see §11.
+- **User-authorized elective item (2026-07-03): dashboard UX/presentation refinement pass**, on
+  branch `portfolio/PF8-dashboard-polish`, with an explicit CP8 review checkpoint (deviation from
+  the "no checkpoint" default above, at the user's direction). Scope is presentation-only:
+  storytelling, layout, typography, plain-English explanations, accordions for advanced material,
+  and a repo-wide first-person ("I", not "we") language sweep across living docs. Hard
+  constraints set by the user: no metric/data/JSON-format changes, no engineering or governance
+  changes, no evidence removal; historical logs stay append-only. Not merged until CP8 approval.
+- **Execution record (2026-07-03, dashboard presentation pass):** critique-first per the user's
+  brief (recruiter / EM / senior-SWE read of the live site, screenshots taken before any code
+  change). Implemented: global design system (typography scale, hero contrast block, insight
+  cards, consequence lists, native `<details>` accordions, K1→P1 timeline, flow strip, CTA grid,
+  value-change flash disabled under `prefers-reduced-motion`); Story rewritten recruiter-first
+  (hero answers "what is this" without scrolling; honest-range vs leaderboard-ceiling contrast as
+  the hero moment; research ladder as a timeline from `governance.json`); Decision Explorer made
+  educational (plain-English outcome cards, live consequence sentences, raise/lower comparison,
+  metric glossary accordion, defaults to the production candidate `dataset_h` at its tuned
+  threshold, data-driven delta vs the tuned point); Model Internals adds the
+  why-dataset_h-ships callout and family meanings; Governance keeps every row/link/note verbatim
+  but moves them into accordions behind summary stat cards and a verify-in-60-seconds callout.
+  First-person sweep across living docs (case study, ADR, one code comment) — append-only logs
+  (`decisions.md` 35, `kaggle_decisions.md` 9) and the frozen
+  `evaluation_feature_quality_audit.md` (3) deliberately untouched. One factual correction found
+  during the rewrite: old Story copy said the default cost ratio was "100x"; `CostConfig` is
+  100 vs 5 = 20x — fixed. Validation: `tsc` clean; build clean; gzip bundle ~453 KB (budget
+  1.5 MB); `mkdocs build --strict` clean; Playwright desktop+mobile — 0 console/page/network
+  errors, slider/accordion interactions verified, key values (0.41917 / 0.16160 / 0.06–0.18 /
+  1,183,747 / stacking 0.149-vs-0.153) confirmed rendering from data. JSON bundle and export
+  script untouched (`git diff` empty on `dashboard/public/data/` and `scripts/`).
+- **Dashboard UX v2 (2026-07-03/04): supersedes the presentation-pass record above.** After
+  reviewing the live v1-polish site, the user commissioned a full product-design rethink
+  (recruiter / EM / senior-SWE / principal-AI-engineer critique) and a from-scratch implementation
+  contract, committed as [`docs/design/dashboard_ux_blueprint_v2.md`](../design/dashboard_ux_blueprint_v2.md)
+  — the authoritative spec for everything below. Implemented phase-by-phase on the same branch
+  (`portfolio/PF8-dashboard-polish`), each phase gated on its own validation pass:
+  - **Phase 1** (`14f7319`): CSS design tokens (type scale, spacing, motion, fate-colour
+    semantics) + 7 shared components (`SectionHeading`, `StatCard`, `InsightCard`, `Callout`,
+    `Accordion`, `CountUpNumber`, `ProvenancePopover`) + `usePrefersReducedMotion`.
+  - **Phase 2** (`00682bd`): Decision Explorer rebuilt around the **Inspection Line** — a canvas
+    particle-flow visualization where each part's true label is drawn once from the dataset's real
+    prevalence and its fate (caught/missed/false-alarm/pass) is resolved only at the gate crossing
+    using the *current* threshold's real recall/FPR, so the illustrative stream reproduces the
+    exact `tp/fp/fn/tn` shares in expectation while the `OutcomeLedger` always reads the real sweep
+    row directly — honesty preserved by construction, not by review. `WaffleFallback` (exact
+    largest-remainder-rounded 10×10 grid) serves reduced-motion and mobile. A real layout bug (CSS
+    cascade/flexbox sizing clipped the horizontal dial under `overflow:hidden`) was found via
+    direct computed-style debugging and fixed, not guessed around.
+  - **Phase 3** (`21f03a8`): Story rebuilt as `GapHero` (the whole first screen) +
+    `RarityField` (1,000-dot rarity visual) + `PipelineFlow` (staged reveal) + `ResearchLadder`
+    (self-drawing SVG line chart, honest points solid / contaminated hollow, verified to match the
+    real per-experiment `oof_status` exactly). Found and fixed a real bug in `CountUpNumber`
+    (Phase 1): it froze permanently at a placeholder value if `value` changed after the reveal
+    already fired — a real risk given every page here loads data asynchronously. Root-caused via
+    direct diagnosis and fixed at the component level (verified against `sweep`/`models.json`
+    settling to exact real values). Also fixed a missing mobile CSS override for the new
+    `.gap-hero` (cascade source-order bug).
+  - **Phase 4** (`1309872`): Model Internals leads with `StackVerdict`, a hero comparison graphic
+    stating the meta-model-loses-to-its-best-base-model finding, numbers pulled live from
+    `models.json`. Fingerprint moved to a hover/focus tooltip (`MetricReadout`, reused from Phase 2).
+  - **Phase 5** (`1ff741c`): Governance re-hierarchized (confident claim + 4 stat cards up top,
+    all evidence preserved verbatim inside accordions) with **provenance-on-hover**
+    (`ProvenancePopover`) replacing the old "verify in 60 seconds" instructional paragraph with the
+    actual capability. Scripted parity check confirmed zero evidence rows lost (all 9 experiment
+    rows, 9 KDR headings, all notes, all repo tags present, cross-checked against the raw JSON).
+    Fixed a real bug found during this phase: wrapping a block-level `StatCard` in the
+    span-only `ProvenancePopover` from Phase 1 would have produced invalid HTML nesting — added an
+    explicit `as="inline" | "block"` mode before it shipped anywhere.
+  - **Phase 6** (`a7e3688`): global copy pass (banned-phrase list clean, no paragraph over two
+    sentences outside an accordion, first-person voice), a single `⌁ traceable` footer link
+    replacing the per-page provenance notes, and removal of 13 CSS classes orphaned by the v2
+    rewrite (confirmed via a used/unused cross-check script against every `.tsx`/`.ts` file).
+  - **Validation, every phase:** `tsc -b --noEmit` clean; production build clean; gzip bundle
+    ~445 KB throughout (budget 1.5 MB); Playwright across desktop/mobile/`reducedMotion: "reduce"`
+    contexts — zero console/page/network errors on all 4 routes in the final pass. `git diff`
+    against `main` confirmed empty on `dashboard/public/data/`, `scripts/`, and `src/` (the
+    pipeline) for the entire branch — no metric, governance, or data change anywhere.
+  - **Not yet done:** merge to `main` — this branch stops at CP8 for review, per the user's
+    explicit instruction ("do not merge without CP approval").
 
 ## 10. Frozen technical decisions
 

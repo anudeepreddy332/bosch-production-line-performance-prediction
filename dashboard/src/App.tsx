@@ -10,8 +10,10 @@ const NAV_ITEMS = [
   { to: "/", label: "Story", end: true },
   { to: "/decision-explorer", label: "Decision Explorer" },
   { to: "/model-internals", label: "Model Internals" },
-  { to: "/governance", label: "Governance & Reproducibility" },
+  { to: "/governance", label: "Governance" },
 ];
+
+const REPO_URL = "https://github.com/anudeepreddy332/bosch-production-line-defect-analysis";
 
 export default function App() {
   return (
@@ -44,11 +46,30 @@ export default function App() {
         </Suspense>
       </main>
       <footer className="app-footer">
-        <span>
-          Client-side only. No data leaves your browser. Source:{" "}
-          <a href="https://github.com/anudeepreddy332/bosch-production-line-defect-analysis" target="_blank" rel="noreferrer">
+        <span className="footer-links">
+          <a href={REPO_URL} target="_blank" rel="noreferrer">
             GitHub
           </a>
+          <a href="/docs/" target="_blank" rel="noreferrer">
+            Documentation
+          </a>
+          <a href={`${REPO_URL}/blob/main/docs/CASE_STUDY_BOSCH_PRODUCTION_SYSTEM.md`} target="_blank" rel="noreferrer">
+            Case study
+          </a>
+          <a href={`${REPO_URL}/releases/tag/v1.0.0`} target="_blank" rel="noreferrer">
+            v1.0.0 release
+          </a>
+          <a
+            href={`${REPO_URL}/blob/main/scripts/ops/export_dashboard_data.py`}
+            target="_blank"
+            rel="noreferrer"
+            title="Every number on this dashboard is exported directly from committed pipeline artifacts by this script — nothing here is hand-typed."
+          >
+            ⌁ traceable
+          </a>
+        </span>
+        <span>
+          Built by Anudeep Reddy. Client-side only — no data leaves your browser.
         </span>
       </footer>
     </div>

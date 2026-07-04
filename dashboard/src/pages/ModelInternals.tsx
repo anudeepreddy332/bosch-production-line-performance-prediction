@@ -2,6 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import Plot from "../lib/plotly";
 import { loadCalibration, loadImportances, loadModelsMeta } from "../lib/data";
 import { MODEL_KEYS, type Calibration, type ImportanceRow, type ModelKey, type ModelsMeta } from "../lib/types";
+import StackVerdict from "../components/internals/StackVerdict";
+import MetricReadout from "../components/explorer/MetricReadout";
+import Accordion from "../components/Accordion";
 
 const FAMILY_COLORS: Record<string, string> = {
   structural: "#1e3a5f",
@@ -12,11 +15,19 @@ const FAMILY_COLORS: Record<string, string> = {
   other: "#8a94a3",
 };
 
+const FAMILY_MEANING: { family: string; meaning: string }[] = [
+  { family: "structural", meaning: "Physical flow of the part: when it entered, how long it took, sensor density." },
+  { family: "rolling-window", meaning: "Short-term line congestion: how many parts passed in the last 1–24 hours." },
+  { family: "path/target-rate", meaning: "Historical failure rates for the route a part took — computed fold-safe, never from its own fold." },
+  { family: "transition/co-occurrence", meaning: "Risky station sequences: which station-to-station hops historically co-occur with failures." },
+  { family: "meta-stack", meaning: "The base models' own predictions, fed to the stacked meta-model." },
+];
+
 export default function ModelInternals() {
   const [modelsMeta, setModelsMeta] = useState<ModelsMeta | null>(null);
   const [importances, setImportances] = useState<Record<ModelKey, ImportanceRow[]> | null>(null);
   const [calibration, setCalibration] = useState<Calibration | null>(null);
-  const [model, setModel] = useState<ModelKey>("meta_model");
+  const [model, setModel] = useState<ModelKey>("dataset_h");
 
   useEffect(() => {
     loadModelsMeta().then(setModelsMeta);
@@ -29,18 +40,20 @@ export default function ModelInternals() {
   const cal = calibration?.[model];
 
   const families = useMemo(() => (imp ? Array.from(new Set(imp.map((r) => r.family))) : []), [imp]);
+  const relevantFamilies = useMemo(
+    () => FAMILY_MEANING.filter((f) => families.includes(f.family)),
+    [families],
+  );
 
   return (
     <section>
       <h1>Model Internals</h1>
-      <p className="lede">
-        Four LightGBM models, stacked: three base models feed a meta-model. Importances, fold-level
-        MCC spread, and calibration are computed from the same honest out-of-fold predictions shown
-        in the Decision Explorer.
-      </p>
+      <p className="lede">Four LightGBM models, three base and one stacked — measured honestly.</p>
+
+      {modelsMeta && <StackVerdict modelsMeta={modelsMeta} />}
 
       <div className="controls-row">
-        <div className="model-select">
+        <div className="model-select" role="group" aria-label="Model selection">
           {MODEL_KEYS.map((key) => (
             <button
               key={key}
@@ -55,31 +68,31 @@ export default function ModelInternals() {
       </div>
 
       {meta && (
-        <div className="card-grid">
+        <div className="card-grid card-grid-tight">
           <div className="card stat">
             <span className="stat-value">{meta.oof_mcc.toFixed(4)}</span>
-            <span className="stat-label">OOF MCC (best threshold {meta.best_threshold.toFixed(2)})</span>
+            <span className="stat-label">Honest OOF MCC at tuned threshold {meta.best_threshold.toFixed(2)}</span>
           </div>
           <div className="card stat">
             <span className="stat-value">{meta.feature_count}</span>
-            <span className="stat-label">Features</span>
+            <span className="stat-label">Features — deliberately few, all deployable</span>
           </div>
           <div className="card stat">
             <span className="stat-value">{meta.rows.toLocaleString()}</span>
-            <span className="stat-label">Training rows (5-fold OOF)</span>
+            <span className="stat-label">Training rows, 5-fold chunk-aware CV</span>
           </div>
-          <div className="card stat">
-            <span className="stat-value" style={{ fontSize: "0.95rem" }} title={meta.data_fingerprint ?? ""}>
-              {meta.data_fingerprint ?? "n/a"}
-            </span>
-            <span className="stat-label">Data fingerprint</span>
-          </div>
+          <MetricReadout
+            value={meta.data_fingerprint ? meta.data_fingerprint.slice(0, 10) + "…" : "n/a"}
+            label="Data fingerprint"
+            definition={`${meta.data_fingerprint ?? "n/a"} — a hash of rows + features + labels, so a rerun can prove it trained on identical data.`}
+          />
         </div>
       )}
 
       {imp && (
         <>
           <h2>Feature importances</h2>
+          <p className="chart-hint">No single feature dominates — nothing fragile here.</p>
           <div className="chart-wrap">
             <Plot
               data={families.map((fam) => {
@@ -107,15 +120,36 @@ export default function ModelInternals() {
               style={{ width: "100%" }}
             />
           </div>
+          {relevantFamilies.length > 0 && (
+            <Accordion summary="What the feature families mean" hint={`${relevantFamilies.length} families in this model`}>
+              <dl className="metric-def">
+                {relevantFamilies.map((f) => (
+                  <div key={f.family}>
+                    <dt>
+                      <span
+                        aria-hidden="true"
+                        className="family-swatch"
+                        style={{ background: FAMILY_COLORS[f.family] ?? "#8a94a3" }}
+                      />
+                      {f.family}
+                    </dt>
+                    <dd>{f.meaning}</dd>
+                  </div>
+                ))}
+              </dl>
+            </Accordion>
+          )}
         </>
       )}
 
       {meta && (
-        <>
-          <h2>Fold-level MCC spread</h2>
-          <p>
-            Per-fold thresholds and MCC vary because the failure rate is ~0.58% overall — each fold
-            has few positive examples, so both quantities are naturally noisy at this scale.
+        <Accordion
+          summary="Fold-level stability"
+          hint="5 folds — spread is expected, not a red flag"
+        >
+          <p className="chart-hint">
+            At a ~0.58% failure rate each fold holds only ~1,400 positives, so per-fold MCC is
+            naturally noisy. I report the spread rather than the best fold.
           </p>
           <div className="chart-wrap">
             <Plot
@@ -139,13 +173,16 @@ export default function ModelInternals() {
               style={{ width: "100%" }}
             />
           </div>
-        </>
+        </Accordion>
       )}
 
       {cal && (
         <>
           <h2>Calibration</h2>
-          <p>Mean predicted probability vs. observed failure rate, in 20 equal-width bins.</p>
+          <p className="chart-hint">
+            Dots near the dashed line mean a 0.8 score really means ~80% failure chance, not just a
+            good ranking — the cost model prices mistakes in real units, so this matters.
+          </p>
           <div className="chart-wrap">
             <Plot
               data={[

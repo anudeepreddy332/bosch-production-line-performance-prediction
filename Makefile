@@ -9,9 +9,8 @@ test:
 lint:
 	ruff check .
 
-# scripts/ops/export_dashboard_data.py is PF4 work (docs/implementation/portfolio_master_plan.md)
-# -- not implemented yet. This target is wired up now so the Makefile's PF2 interface is stable;
-# it will do the real export once that script exists.
+# scripts/ops/export_dashboard_data.py shipped in PF4 (docs/implementation/portfolio_master_plan.md).
+# The existence check below is a harmless defensive guard, not a sign the script is still pending.
 dashboard-data:
 	@if [ -f scripts/ops/export_dashboard_data.py ]; then \
 		PYTHONPATH=. python scripts/ops/export_dashboard_data.py; \
