@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+message: >-
+  If you reference this project, please cite it using the metadata below.
+title: >-
+  Bosch Production Line Performance — Failure Detection & Decision System
+type: software
+authors:
+  - given-names: Anudeep Reddy
+    family-names: Mutyala
+repository-code: >-
+  https://github.com/anudeepreddy332/bosch-production-line-defect-analysis
+url: https://bosch.themachinist.org
+license: MIT
+version: 1.0.0
+date-released: "2026-07-03"
+abstract: >-
+  A production-style ML decision system for detecting manufacturing failures in the Bosch
+  Production Line Performance dataset (~0.58% failure rate), built around leakage-safe features,
+  an honestly measured operating range, cost-based decision thresholds, and label-free production
+  monitoring. A separate, fully quarantined Kaggle leaderboard-optimization track measures and
+  attributes how much of the dataset's competition leaderboard performance comes from mechanisms
+  that are not deployable in production.
+keywords:
+  - machine-learning
+  - manufacturing
+  - anomaly-detection
+  - decision-systems
+  - mlops

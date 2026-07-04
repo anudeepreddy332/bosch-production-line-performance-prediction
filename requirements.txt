@@ -16,3 +16,4 @@ evidently>=0.7.21,<0.8
 fsspec>=2024.9,<2027
 iterative-telemetry>=0.0.10,<0.1
 statsmodels>=0.14,<0.15
+matplotlib>=3.8,<4  # scripts/research/train_e4_ranking_stability.py only; not used by the app/API/CI
