@@ -1,10 +1,12 @@
 # Bosch Production Line Failure Decision System
 
+
 > **Note on data provenance:** the RP2 numbers in this document (Executive Summary and §7's
 > "authoritative, reproducible" table) are reproducible today from committed code. Section 7 also
 > preserves an older set of operating points from a since-deleted artifact, kept only as a worked
 > example of the decision-system *methodology* — see the sidebar directly above that table for the
 > full provenance note before citing any number from that subsection specifically.
+
 
 ## Executive Summary
 I converted a competition-style ML workflow into a production decision system for failure prevention on a highly imbalanced manufacturing problem (about **0.58% failures**). Instead of optimizing only MCC, I optimized business outcomes: failures caught, inspection load, and cost.
