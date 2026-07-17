@@ -22,7 +22,7 @@ regimes → separately, a 9-experiment, fully-attributed Kaggle research program
 same dataset's competition leaderboard from 0.162 to **0.419 private MCC**, entirely through
 mechanisms this project's own charter excludes from production.
 
-**Dashboard:** an interactive recruiter-facing dashboard — Story / Decision Explorer / Model
+**Dashboard:** an interactive user-facing dashboard — Story / Decision Explorer / Model
 Internals / Governance & Reproducibility — is live at **[bosch.themachinist.org](https://bosch.themachinist.org)**,
 built from [`dashboard/`](dashboard/) and deployed via
 [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml). Every number it shows
@@ -47,7 +47,7 @@ Run it locally: `cd dashboard && npm ci && npm run dev`.
 | **[`docs/research/kaggle_decisions.md`](docs/research/kaggle_decisions.md)** | The full, pre-registered Kaggle research log (KDR-001–KDR-009) |
 | **[`results/leaderboard.json`](results/leaderboard.json)** | Machine-readable results registry — the source of truth for every Kaggle number in this repo |
 | **[`docs/implementation/portfolio_master_plan.md`](docs/implementation/portfolio_master_plan.md)** | The execution ledger currently driving this repository's engineering roadmap |
-| **[`dashboard/`](dashboard/)** | Recruiter dashboard source (Vite + React + TypeScript) |
+| **[`dashboard/`](dashboard/)** | dashboard source (Vite + React + TypeScript) |
 
 ---
 
@@ -216,7 +216,7 @@ Docker, S3, and EC2 deployment live in [`docs/runbooks/`](docs/runbooks/README.m
 
 ## Internal operator dashboard
 
-Separate from the public recruiter dashboard linked above, `apps/streamlit_dashboard/app.py` is a
+Separate from the public dashboard linked above, `apps/streamlit_dashboard/app.py` is a
 credentialed Streamlit tool for local/S3-connected operation, with two views over the same data:
 
 **View A — Production Monitoring (Track 3, label-free):** batch/cycle progress, risk-score
@@ -235,7 +235,7 @@ credential-free; set `DATA_SOURCE=s3` for the S3-backed mode — see
 ## Tech stack
 
 Python, pandas, LightGBM · Chunk-aware `StratifiedGroupKFold` CV (`src/training/cv.py`) · FastAPI
-(serving) · Vite + React + TypeScript (recruiter dashboard) · Streamlit (internal operator
+(serving) · Vite + React + TypeScript (dashboard) · Streamlit (internal operator
 dashboard) · Evidently (drift monitoring) · Docker (`Dockerfile.api`, `Dockerfile.dashboard`,
 `docker-compose.yml`) · S3 (append-only prediction partitions) · MkDocs Material (docs site).
 
@@ -250,14 +250,14 @@ with an Evidence/Outcome/Decision record, mirroring how a real ML org would run 
 - **Track 2 (Kaggle):** [`docs/research/kaggle_decisions.md`](docs/research/kaggle_decisions.md) —
   KDR-001 through KDR-009, tag `track2-frozen`. Registry: `results/leaderboard.json`.
 - **Repository engineering:** [`docs/implementation/portfolio_master_plan.md`](docs/implementation/portfolio_master_plan.md)
-  — phases PF0–PF6 complete (tests + CI, code hygiene, the recruiter dashboard, the docs site,
+  — phases PF0–PF6 complete (tests + CI, code hygiene, the dashboard, the docs site,
   and the `v1.0.0` release); PF8 (dashboard presentation refinement) is under review; PF7 (an
   always-on hosted tier) remains optional and not started.
 
 ## Project status
 
 The Kaggle research program is frozen (KDR-009). Repository engineering has since shipped a
-minimal test suite + CI, the recruiter dashboard, a documentation site, and the `v1.0.0` release —
+minimal test suite + CI, the dashboard, a documentation site, and the `v1.0.0` release —
 tracked as a phased, checkpointed plan, not a wishlist:
 [`docs/implementation/portfolio_master_plan.md`](docs/implementation/portfolio_master_plan.md).
 On the production side, the case study's own
